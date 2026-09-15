@@ -225,6 +225,8 @@ int main(void)
 
 
   /* USER CODE BEGIN 1 */
+	/* As funções referentes a atividade avaliativa estao dentro do header AtvvAvaliaticaOne.h, nela estão as funções*/
+
 
 
 
@@ -250,11 +252,8 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
 
-
+  /* Chame aqui a função referente a rotina */
   aula_11_09();
-
-
-
 
 
   /* USER CODE END 2 */
