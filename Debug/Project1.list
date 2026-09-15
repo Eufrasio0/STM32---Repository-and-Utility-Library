@@ -1282,8 +1282,8 @@ void aula_11_09(){
  8000aa4:	40020000 	.word	0x40020000
 
 08000aa8 <rotina>:
-
 void questao11(){
+
 
 }
 
