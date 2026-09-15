@@ -115,8 +115,39 @@ void questao9(){
 }
 
 void questao11(){
+	GPIO_Clock_Enable(GPIOA);
 
+	GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_1, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_2, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_3, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_4, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_5, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
 
+	const int mascaras[16] = {
+			0b1011111,
+			0b1010000,
+			0b0111011,
+			0b0101111,
+			0b1100110,
+			0b1101101,
+			0b1111101,
+			0b0000111,
+			0b1111111,
+			0b1101111,
+			0b1110111,
+			0b1111111,
+			0b1011001,
+			0b1011111,
+			0b1111001,
+			0b1110001
+	};
+
+	for(int i = 0; i < 16;i++){
+        GPIOA->BSRR = (0b1111111 << 16);
+        GPIOA->BSRR = mascara[i];
+	}
 }
 
 #endif /*ATVVAVALIATIVAONE_H_*/
