@@ -59,9 +59,9 @@ void EXTI2_IRQHandler(){
 
 void comp(GPIO_TypeDef* GPIOx, uint8_t PINO, int angulo){
 
-	  GPIO_Clock_Enable(GPIOx);
+	  	GPIO_Clock_Enable(GPIOx);
 	    GPIO_Pin_Mode(GPIOx, PINO, OUTPUT);
-
+	    int cont = 0;
 	    int pulso = 500 + (angulo * 2000) / 180;
 	    for(int i = 0; i < 25; i++)
 	    {
@@ -70,6 +70,8 @@ void comp(GPIO_TypeDef* GPIOx, uint8_t PINO, int angulo){
 
 	        GPIO_Write_Pin(GPIOx, PINO, LOW);
 	        Delay_us(20000 - pulso);
+	        Delay_ms(50);
+
 	    }
 }
 
@@ -77,12 +79,12 @@ void questao1(){
 
 	GPIO_Clock_Enable(GPIOA);
 
-	GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
 
 	while(1){
-		GPIO_Toggle_Pin(GPIOA, PIN_6);
+		GPIO_Toggle_Pin(GPIOA, PIN_0);
 		Delay_ms(250);
-		GPIO_Toggle_Pin(GPIOA, PIN_6);
+		GPIO_Toggle_Pin(GPIOA, PIN_0);
 		Delay_ms(250);
 	}
 
@@ -92,13 +94,13 @@ void questao3(){
 
 	GPIO_Clock_Enable(GPIOA);
 
-	GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
 
 	while(1){
 		for(int i = 0; i < 4; i++){
-			GPIO_Toggle_Pin(GPIOA, PIN_6);
+			GPIO_Toggle_Pin(GPIOA, PIN_0);
 			Delay_ms(50);
-			GPIO_Toggle_Pin(GPIOA, PIN_6);
+			GPIO_Toggle_Pin(GPIOA, PIN_0);
 			Delay_ms(50);
 		}
 		Delay_ms(2000);
@@ -157,34 +159,24 @@ void questao9(){
 	GPIO_Pin_Mode(GPIOA, PIN_7, OUTPUT);
 	GPIO_Pin_Mode(GPIOA, PIN_8, OUTPUT);
 
-	int sinal = 0;
 
 	while(1){
-		if(sinal == 0){
-			GPIO_Toggle_Pin(GPIOA, PIN_3);
-			Delay_ms(3000);
-			GPIO_Toggle_Pin(GPIOA, PIN_3);
-			GPIO_Toggle_Pin(GPIOA, PIN_4);
-			Delay_ms(2000);
-			GPIO_Toggle_Pin(GPIOA, PIN_4);
-			GPIO_Toggle_Pin(GPIOA, PIN_5);
-			Delay_ms(5000);
-			GPIO_Toggle_Pin(GPIOA, PIN_5);
-			Delay_ms(1000);
-			sinal++;
-		}else{
-			GPIO_Toggle_Pin(GPIOA, PIN_6);
-			Delay_ms(3000);
-			GPIO_Toggle_Pin(GPIOA, PIN_6);
-			GPIO_Toggle_Pin(GPIOA, PIN_7);
-			Delay_ms(2000);
-			GPIO_Toggle_Pin(GPIOA, PIN_7);
-			GPIO_Toggle_Pin(GPIOA, PIN_8);
-			Delay_ms(5000);
-			GPIO_Toggle_Pin(GPIOA, PIN_8);
-			Delay_ms(1000);
-			sinal--;
-		}
+		GPIO_Toggle_Pin(GPIOA, PIN_3);
+		GPIO_Toggle_Pin(GPIOA, PIN_8);
+		Delay_ms(2000);
+		GPIO_Toggle_Pin(GPIOA, PIN_3);
+		GPIO_Toggle_Pin(GPIOA, PIN_8);
+		GPIO_Toggle_Pin(GPIOA, PIN_4);
+		GPIO_Toggle_Pin(GPIOA, PIN_7);
+		Delay_ms(2000);
+		GPIO_Toggle_Pin(GPIOA, PIN_4);
+		GPIO_Toggle_Pin(GPIOA, PIN_7);
+		GPIO_Toggle_Pin(GPIOA, PIN_5);
+		GPIO_Toggle_Pin(GPIOA, PIN_6);
+		Delay_ms(1000);
+		GPIO_Toggle_Pin(GPIOA, PIN_5);
+		GPIO_Toggle_Pin(GPIOA, PIN_6);
+
 	}
 }
 

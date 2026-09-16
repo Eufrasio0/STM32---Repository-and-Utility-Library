@@ -5,30 +5,6 @@
 #include "Utility.h"
 
 
-void frequencia(GPIO_TypeDef* GPIOx, uint8_t PINO ,int freq)
-{
-    GPIO_Clock_Enable(GPIOx);
-    GPIO_Pin_Mode(GPIOx, PINO, OUTPUT);
-    int periodo = 1000000 / freq;
-    int meio_periodo = periodo / 2;
-    int ciclos = freq / 2;
-
-    for(int i = 0; i < ciclos; i++)
-    {
-        GPIO_Write_Pin(GPIOx, PINO, HIGH);
-        Delay_us(meio_periodo);
-
-        GPIO_Write_Pin(GPIOx, PINO, LOW);
-        Delay_us(meio_periodo);
-    }
-}
-
-void beep(GPIO_TypeDef* GPIOx, uint8_t PINO ,int freq, int quant){
-	for(int i = 0; i < quant;i++){
-		frequencia(GPIOx, PINO, freq);
-	}
-}
-
 void escalaMusical(GPIO_TypeDef* GPIOx, uint8_t PINO){
 	  while(1){
 		  frequencia(GPIOx, PINO, 261);
