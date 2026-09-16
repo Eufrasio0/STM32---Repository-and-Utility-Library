@@ -23,6 +23,12 @@ void frequencia(GPIO_TypeDef* GPIOx, uint8_t PINO ,int freq)
     }
 }
 
+void beep(GPIO_TypeDef* GPIOx, uint8_t PINO ,int freq, int quant){
+	for(int i = 0; i < quant;i++){
+		frequencia(GPIOx, PINO, freq);
+	}
+}
+
 void escalaMusical(GPIO_TypeDef* GPIOx, uint8_t PINO){
 	  while(1){
 		  frequencia(GPIOx, PINO, 261);
