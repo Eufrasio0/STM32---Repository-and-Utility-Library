@@ -2,75 +2,141 @@
 #define BIBUSTM32_H_
 
 #include "stm32f4xx.h"
+#include "Utility.h"
 
 
-//Números dos pinos GPIO
-enum{
-	PIN_0,
-	PIN_1,
-	PIN_2,
-	PIN_3,
-	PIN_4,
-	PIN_5,
-	PIN_6,
-	PIN_7,
-	PIN_8,
-	PIN_9,
-	PIN_10,
-	PIN_11,
-	PIN_12,
-	PIN_13,
-	PIN_14,
-	PIN_15
-};
-
-//Modos de operação de um pino GPIO
-enum{
-	INPUT,		//modo de entrada digital
-	OUTPUT,		//modo de saída digital
-	ALTERNATE,	//modo de função alternativa
-	ANALOG		//modo analógico
-};
-
-//Tipos de saída de um pino GPIO
-enum{
-	PUSH_PULL,	//saída push-pull
-	OPEN_DRAIN	//saída open-drain
-};
-
-//Níveis lógicos de saída de um pino
-enum{
-	LOW,	//nível lógico baixo
-	HIGH	//nível lógico alto
-};
-
-//Modos de operação dos resistores de pull-up e pull-down
-enum{
-	PULL_UP = 0b01,		//resistor de pull-up
-	PULL_DOWN = 0b10	//resistor de pull-down
-};
-
-
-//Escopo das funções
-
-void GPIO_Output_Type(GPIO_TypeDef* GPIOx, uint8_t PINO, uint8_t MODE);
-void GPIO_Clock_Enable(GPIO_TypeDef* GPIOx);
-
-
-void GPIO_Clock_Enable(GPIO_TypeDef* GPIOx)
+void frequencia(GPIO_TypeDef* GPIOx, uint8_t PINO ,int freq)
 {
-	RCC->AHB1ENR |= (1 << ((uint32_t)GPIOx - (GPIOA_BASE)) / ((GPIOB_BASE) - (GPIOA_BASE)));
+    GPIO_Clock_Enable(GPIOx);
+    GPIO_Pin_Mode(GPIOx, PINO, OUTPUT);
+    int periodo = 1000000 / freq;
+    int meio_periodo = periodo / 2;
+    int ciclos = freq / 2;
+
+    for(int i = 0; i < ciclos; i++)
+    {
+        GPIO_Write_Pin(GPIOx, PINO, HIGH);
+        Delay_us(meio_periodo);
+
+        GPIO_Write_Pin(GPIOx, PINO, LOW);
+        Delay_us(meio_periodo);
+    }
 }
 
-void GPIO_Output_Type(GPIO_TypeDef* GPIOx, uint8_t PINO, uint8_t MODE){
-	GPIOx->OTYPER &= ~(1 << PINO);
-	GPIOx->OTYPER |= (MODE << PINO);
+void escalaMusical(GPIO_TypeDef* GPIOx, uint8_t PINO){
+	  while(1){
+		  frequencia(GPIOx, PINO, 261);
+		  Delay_ms(500);
+		  frequencia(GPIOx, PINO,293);
+		  Delay_ms(500);
+		  frequencia(GPIOx, PINO,329);
+		  Delay_ms(500);
+		  frequencia(GPIOx, PINO,349);
+		  Delay_ms(500);
+		  frequencia(GPIOx, PINO,392);
+		  Delay_ms(500);
+		  frequencia(GPIOx, PINO,440);
+		  Delay_ms(500);
+		  frequencia(GPIOx, PINO,493);
+		  Delay_ms(500);
+		  frequencia(GPIOx, PINO,523);
+		  Delay_ms(500);
+	  }
 }
 
-void GPIO_Output_Type(GPIO_TypeDef* GPIOx, uint8_t PINO, uint8_t MODE){
-	GPIOx->OTYPER &= ~(1 << PINO);
-	GPIOx->OTYPER |= (MODE << PINO);
+
+void servo(GPIO_TypeDef* GPIOx, uint8_t PINO, int angulo)
+{
+    GPIO_Clock_Enable(GPIOx);
+    GPIO_Pin_Mode(GPIOx, PINO, OUTPUT);
+
+    int pulso = 1000 + (angulo * 1000) / 180;
+
+    for(int i = 0; i < 25; i++)
+    {
+        GPIO_Write_Pin(GPIOx, PINO, HIGH);
+        Delay_us(pulso);
+
+        GPIO_Write_Pin(GPIOx, PINO, LOW);
+        Delay_us(20000 - pulso);
+    }
 }
+
+void PWM_LED(int tempo)
+{
+    int marc = 0;
+    GPIO_Clock_Enable(GPIOA);
+    GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
+
+
+    while(1)
+    {
+        GPIO_Write_Pin(GPIOA, PIN_6, HIGH);
+        Delay_us(tempo);
+
+        GPIO_Write_Pin(GPIOA, PIN_6, LOW);
+        Delay_us(10000 - tempo);
+
+        if(marc == 0)
+            tempo -= 100;
+
+        if(marc == 1)
+            tempo += 100;
+
+        if(tempo <= 0){
+            marc = 1;
+        }
+
+        if(tempo >= 10000){
+            marc = 0;
+        }
+    }
+}
+
+void interrupcao(){
+	//Configura Clock
+	GPIO_Clock_Enable(GPIOE);
+	GPIO_Clock_Enable(GPIOA);
+
+	//Define os botoes e habilita o resistor interno
+	GPIO_Pin_Mode(GPIOE, PIN_3, INPUT);
+	GPIO_Pin_Mode(GPIOE, PIN_4, INPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_0, INPUT);
+	GPIO_Resistor_Enable(GPIOE, PIN_3, PULL_UP);
+	GPIO_Resistor_Enable(GPIOE, PIN_4, PULL_UP);
+	GPIO_Resistor_Enable(GPIOA, PIN_0, PULL_DOWN);
+
+	//Define os botoes da placa
+	GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_7, OUTPUT);
+	GPIO_Write_Pin(GPIOA, PIN_6, HIGH);
+	GPIO_Write_Pin(GPIOA, PIN_7, HIGH);
+
+
+	//Definir interrupções
+
+	EXTI_Config(EXTI3, GPIOE, FALLING_EDGE);
+	EXTI_Config(EXTI4, GPIOE, FALLING_EDGE);
+
+	NVIC_EnableIRQ(EXTI3_IRQn);
+	NVIC_EnableIRQ(EXTI4_IRQn);
+
+
+	NVIC_SetPriority(EXTI3_IRQn, 0);
+	NVIC_SetPriority(EXTI4_IRQn, -1);
+}
+
+void EXTI3_IRQHandler(){
+	//Digite aqui a rotina da interrupçao
+	EXTI_Clear_Pending(EXTI3);
+}
+
+void EXTI4_IRQHandler(){
+	//Digite aqui a rotina da interrupçao
+	EXTI_Clear_Pending(EXTI4);
+
+}
+
 
 
 

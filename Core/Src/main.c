@@ -20,6 +20,7 @@
 #include "main.h"
 #include "Utility.h"
 #include "AtvvAvaliativaOne.h"
+#include "BibUSTM32.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -123,8 +124,6 @@ void aula_11_09(){
 	NVIC_SetPriority(EXTI3_IRQn, 0);
 	NVIC_SetPriority(EXTI4_IRQn, -1);
 	NVIC_SetPriority(EXTI0_IRQn, -2);
-
-
 }
 
 void rotina(){
@@ -166,49 +165,6 @@ void mudar_prioridade(){
 }
 
 
-void EXTI3_IRQHandler(){
-	rotina_secundaria();
-	EXTI_Clear_Pending(EXTI3);
-}
-
-void EXTI4_IRQHandler(){
-	rotina();
-	EXTI_Clear_Pending(EXTI4);
-
-}
-
-void EXTI0_IRQHandler(){
-	mudar_prioridade();
-	EXTI_Clear_Pending(EXTI0);
-
-}
-
-void PWM_LED(int tempo){
-
-
-	int marc = 0;
-
-	while(1){
-
-		GPIO_Write_Pin(GPIOA, PIN_6, LOW);
-		Delay_us(tempo);
-		GPIO_Write_Pin(GPIOA, PIN_6, HIGH);
-		Delay_us(10000 - tempo);
-		if(marc == 0){
-			tempo = tempo - 100;
-		}
-		if(marc == 1){
-			tempo = tempo + 100;
-		}
-
-		if(tempo == 0){
-			marc = 1;
-		}
-		if(tempo == 10000){
-			marc = 0;
-		}
-	}
-}
 
 
 
@@ -226,9 +182,6 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	/* As funções referentes a atividade avaliativa estao dentro do header AtvvAvaliaticaOne.h, nela estão as funções*/
-
-
-
 
   /* USER CODE END 1 */
 
@@ -253,10 +206,14 @@ int main(void)
   MX_GPIO_Init();
 
   /* Chame aqui a função referente a rotina */
-  aula_11_09();
 
 
-  /* USER CODE END 2 */
+  questao15();
+
+
+
+  /* USER CODE END 2
+   * Dó (C4): 261,63 HzRé (D4): 293,66 HzMi (E4): 329,63 HzFá (F4): 349,23 HzSol (G4): 392,00 HzLá (A4): 440,00 HzSi (B4): 493,88 Hz*/
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */

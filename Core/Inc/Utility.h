@@ -377,7 +377,7 @@ void GPIO_Resistor_Enable(GPIO_TypeDef* GPIOx, uint8_t pin, uint8_t mode)
 }
 
 //Lê e retorna o nível lógico em um pino de um GPIO
-static inline uint8_t C(GPIO_TypeDef* GPIOx, uint8_t pin)
+static inline uint8_t GPIO_Read_Pin(GPIO_TypeDef* GPIOx, uint8_t pin)
 {
 	return ((GPIOx->IDR & (1 << pin)) >> pin);
 }
