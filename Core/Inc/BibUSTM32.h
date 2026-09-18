@@ -97,27 +97,11 @@ void interrupcao(){
 
 	//Definir interrupções
 
-	EXTI_Config(EXTI3, GPIOE, FALLING_EDGE);
-	EXTI_Config(EXTI4, GPIOE, FALLING_EDGE);
-
-	NVIC_EnableIRQ(EXTI3_IRQn);
-	NVIC_EnableIRQ(EXTI4_IRQn);
-
-
-	NVIC_SetPriority(EXTI3_IRQn, 0);
-	NVIC_SetPriority(EXTI4_IRQn, -1);
-}
-
-void EXTI3_IRQHandler(){
-	//Digite aqui a rotina da interrupçao
-	EXTI_Clear_Pending(EXTI3);
-}
-
-void EXTI4_IRQHandler(){
-	//Digite aqui a rotina da interrupçao
-	EXTI_Clear_Pending(EXTI4);
 
 }
+
+
+
 
 
 

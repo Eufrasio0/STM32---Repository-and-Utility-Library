@@ -4,6 +4,10 @@
 #include "stm32f4xx.h"
 #include "Utility.h"
 
+//Declaracao das flags
+volatile int flag = 0;
+volatile int pedestre= 0;
+volatile int cont=0;
 
 void frequencia(GPIO_TypeDef* GPIOx, uint8_t PINO ,int freq)
 {
@@ -31,37 +35,104 @@ void beep(GPIO_TypeDef* GPIOx, uint8_t PINO ,int freq, int quant){
 	}
 }
 
+void piscar_led(int PINO){
+		GPIO_Toggle_Pin(GPIOA, PINO);
+		Delay_ms(50);
+}
+
+void semaforo_pedestre(int PINO1, int PINO2)
+{
+    GPIO_Write_Pin(GPIOA, PINO1, HIGH);
+    GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
+
+    Delay_ms(3000);
+
+    for(int i = 0; i < 10; i++)
+    {
+        GPIO_Write_Pin(GPIOA, PINO2, HIGH);
+        Delay_ms(200);
+
+        GPIO_Write_Pin(GPIOA, PINO2, LOW);
+        Delay_ms(200);
+    }
+    GPIO_Write_Pin(GPIOA, PIN_2, LOW);
+
+    GPIO_Write_Pin(GPIOA, PINO1, LOW);
+    GPIO_Write_Pin(GPIOA, PINO2, LOW);
+
+    pedestre = 0;
+}
+
+void semaforo(int PINO){
+	GPIO_Toggle_Pin(GPIOA, PINO);
+	if(PINO == PIN_0 || PINO == PIN_1){
+		GPIO_Write_Pin(GPIOA, PIN_4, HIGH);
+	}
+	if(PINO == PIN_2){
+		GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
+	}
+	for(int i = 0; i < 100; i++){
+		if(GPIO_Read_Pin(GPIOA, PIN_0) == 1 && pedestre == 1) break;
+		Delay_ms(30);
+	}
+	GPIO_Write_Pin(GPIOA, PIN_4, LOW);
+	GPIO_Write_Pin(GPIOA, PIN_3, LOW);
+
+	GPIO_Toggle_Pin(GPIOA, PINO);
+
+}
+
+
+
 
 void EXTI0_IRQHandler(){
 	//Digite aqui a rotina da interrupçaoaaaaaaa
-	beep(GPIOA, PIN_5, 493, 3);
-	while(1){
-		GPIO_Toggle_Pin(GPIOA, PIN_3);
-		Delay_ms(500);
+	while(flag == 1){
+		piscar_led(PIN_3);
 	}
+	flag = 1;
 }
 
 void EXTI1_IRQHandler(){
 	//Digite aqui a rotina da interrupçao
-	beep(GPIOA, PIN_5, 493, 3);
-	while(1){
-		GPIO_Toggle_Pin(GPIOA, PIN_4);
-		Delay_ms(500);
+	while(flag == 2){
+		piscar_led(PIN_4);
 	}
+	flag = 2;
 }
 
 void EXTI2_IRQHandler(){
-	EXTI_Clear_Pending(EXTI0);
-	EXTI_Clear_Pending(EXTI1);
+
+	GPIO_Write_Pin(GPIOA, PIN_3, LOW);
+	GPIO_Write_Pin(GPIOA, PIN_4, LOW);
+	if(flag == 2){
+		EXTI_Clear_Pending(EXTI0);
+		EXTI_Clear_Pending(EXTI1);
+		flag = 0;
+	}
+	if(flag == 1){
+		EXTI_Clear_Pending(EXTI1);
+		EXTI_Clear_Pending(EXTI0);
+		flag = 0;
+	}
 
 	EXTI_Clear_Pending(EXTI2);
 }
 
-void comp(GPIO_TypeDef* GPIOx, uint8_t PINO, int angulo){
+void EXTI3_IRQHandler(){
+	pedestre = 1;
+	EXTI_Clear_Pending(EXTI3);
+}
+
+void EXTI4_IRQHandler(){
+	flag = !flag;
+	EXTI_Clear_Pending(EXTI4);
+}
+
+void servomotor(GPIO_TypeDef* GPIOx, uint8_t PINO, int angulo){
 
 	  	GPIO_Clock_Enable(GPIOx);
 	    GPIO_Pin_Mode(GPIOx, PINO, OUTPUT);
-	    int cont = 0;
 	    int pulso = 500 + (angulo * 2000) / 180;
 	    for(int i = 0; i < 25; i++)
 	    {
@@ -70,7 +141,6 @@ void comp(GPIO_TypeDef* GPIOx, uint8_t PINO, int angulo){
 
 	        GPIO_Write_Pin(GPIOx, PINO, LOW);
 	        Delay_us(20000 - pulso);
-	        Delay_ms(50);
 
 	    }
 }
@@ -147,6 +217,50 @@ void questao7(){
 	}
 }
 
+void questao8(){
+	Utility_Init(); //Inicia o uso da biblioteca
+
+	GPIO_Clock_Enable(GPIOD); //Ativa a porta D
+
+	GPIO_Pin_Mode(GPIOD, PIN_0, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_1, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_2, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_3, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_4, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_5, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_6, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_7, OUTPUT);
+
+	GPIO_Write_Pin(GPIOD, PIN_0, LOW);
+	GPIO_Write_Pin(GPIOD, PIN_1, LOW);
+	GPIO_Write_Pin(GPIOD, PIN_2, LOW);
+	GPIO_Write_Pin(GPIOD, PIN_3, LOW);
+	GPIO_Write_Pin(GPIOD, PIN_4, LOW);
+	GPIO_Write_Pin(GPIOD, PIN_5, LOW);
+	GPIO_Write_Pin(GPIOD, PIN_6, LOW);
+	GPIO_Write_Pin(GPIOD, PIN_7, LOW);
+
+
+	GPIO_Toggle_Pin(GPIOD, PIN_0);
+	Delay_ms(400);
+	GPIO_Toggle_Pin(GPIOD, PIN_0);
+
+	while(1){
+		for (int i=1; i<8;i++){
+			GPIO_Toggle_Pin(GPIOD, i);
+			Delay_ms(400);
+			GPIO_Toggle_Pin(GPIOD, i);
+		}
+
+		for (int j=6; j>=0;j--){
+			GPIO_Toggle_Pin(GPIOD, j);
+			Delay_ms(400);
+			GPIO_Toggle_Pin(GPIOD, j);
+		}
+	}
+}
+
+
 void questao9(){
 
 	GPIO_Clock_Enable(GPIOA);
@@ -179,6 +293,41 @@ void questao9(){
 
 	}
 }
+
+void questao10(){
+	Utility_Init(); //Inicia o uso da biblioteca
+
+	GPIO_Clock_Enable(GPIOA); //Ativa a porta D
+	GPIO_Clock_Enable(GPIOE); //Ativa a porta D
+
+
+	GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_1, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_2, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_3, OUTPUT);
+	GPIO_Pin_Mode(GPIOA, PIN_4, OUTPUT);
+
+	GPIO_Pin_Mode(GPIOE, PIN_3, INPUT); //configura o pino 3E como entrada
+	GPIO_Resistor_Enable(GPIOE, PIN_3, PULL_UP);//ativa o registrador de pull-up do pino 3E
+	EXTI_Config(EXTI3, GPIOE, FALLING_EDGE);
+	NVIC_EnableIRQ(EXTI3_IRQn);
+	NVIC_SetPriority(EXTI3_IRQn, 0);
+
+    while (1)
+    {
+        while (pedestre == 0)
+        {
+            semaforo(PIN_0);
+            semaforo(PIN_1);
+            semaforo(PIN_2);
+        }
+
+        semaforo_pedestre(PIN_3, PIN_4);
+    }
+
+
+}
+
 
 void questao11(){
 	GPIO_Clock_Enable(GPIOA);
@@ -219,16 +368,28 @@ void questao11(){
 }
 
 void questao13(){
-	comp(GPIOA, PIN_0,0);
-    Delay_ms(1000);
+	Utility_Init(); //Inicia o uso da biblioteca
 
-    comp(GPIOA, PIN_0,180);
-    Delay_ms(1000);
+	GPIO_Clock_Enable(GPIOA); //Ativa a porta A
 
-    comp(GPIOA, PIN_0,0);
-    Delay_ms(1000);
+	GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
 
+	GPIO_Write_Pin(GPIOA, PIN_0, LOW);
 
+	while(1){
+		for (int i=500; i<=2500;i=i+50){
+			GPIO_Toggle_Pin(GPIOA, PIN_0);
+			Delay_us(i);
+			GPIO_Toggle_Pin(GPIOA, PIN_0);
+			Delay_ms(20);
+		}
+		for (int i=2500; i>=500;i=i-50){
+			GPIO_Toggle_Pin(GPIOA, PIN_0);
+			Delay_us(i);
+			GPIO_Toggle_Pin(GPIOA, PIN_0);
+			Delay_ms(20);
+		}
+	}
 
 }
 
@@ -236,37 +397,37 @@ void questao15()
 {
     GPIO_Clock_Enable(GPIOA);
 
-    GPIO_Pin_Mode(GPIOA, PIN_0, INPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_4, INPUT);
     GPIO_Pin_Mode(GPIOA, PIN_1, OUTPUT);
 
-    GPIO_Resistor_Enable(GPIOA, PIN_0, PULL_UP);
+    GPIO_Resistor_Enable(GPIOA, PIN_4, PULL_UP);
 
-    int estado = LOW;
+	EXTI_Config(EXTI4, GPIOA, FALLING_EDGE);
+	NVIC_EnableIRQ(EXTI4_IRQn);
+    while(1){
+		if(flag == 1){
+			GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
+		}
+		else {
+			GPIO_Write_Pin(GPIOA, PIN_1, LOW);
 
-    while(1)
-    {
-        if ((GPIOA->IDR & (1 << 0)) == 0)
-        {
-            estado = !estado;
-            GPIO_Write_Pin(GPIOA, PIN_1, estado);
-
-            while ((GPIOA->IDR & (1 << 0)) == 0)
-            {
-            }
-            Delay_ms(30);
-        }
+		}
     }
+
 }
 
 void questao17(){
-    GPIO_Clock_Enable(GPIOA);
 
+	/*Pedro, c vai montar seguindo os esquemas descritos abaixo*/
+
+    GPIO_Clock_Enable(GPIOA);
+//botoes
     GPIO_Pin_Mode(GPIOA, PIN_0, INPUT);
     GPIO_Pin_Mode(GPIOA, PIN_1, INPUT);
     GPIO_Pin_Mode(GPIOA, PIN_2, INPUT);
+
     GPIO_Pin_Mode(GPIOA, PIN_3, OUTPUT);
     GPIO_Pin_Mode(GPIOA, PIN_4, OUTPUT);
-    GPIO_Pin_Mode(GPIOA, PIN_5, OUTPUT);
 
 
     GPIO_Resistor_Enable(GPIOA, PIN_0, PULL_UP);
@@ -281,9 +442,9 @@ void questao17(){
 	NVIC_EnableIRQ(EXTI1_IRQn);
 	NVIC_EnableIRQ(EXTI2_IRQn);
 
-	NVIC_SetPriority(EXTI0_IRQn, 0);
-	NVIC_SetPriority(EXTI1_IRQn, 0);
-	NVIC_SetPriority(EXTI2_IRQn, -1);
+	NVIC_SetPriority(EXTI0_IRQn, 1);
+	NVIC_SetPriority(EXTI1_IRQn, 1);
+	NVIC_SetPriority(EXTI2_IRQn, 0);
 }
 
 
