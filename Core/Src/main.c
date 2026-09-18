@@ -208,7 +208,7 @@ int main(void)
   /* Chame aqui a função referente a rotina */
 
 
-  questao10();
+  questao17();
 
 
 

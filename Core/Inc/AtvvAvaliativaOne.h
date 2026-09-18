@@ -69,15 +69,12 @@ void semaforo(int PINO){
 	if(PINO == PIN_0 || PINO == PIN_1){
 		GPIO_Write_Pin(GPIOA, PIN_4, HIGH);
 	}
-	if(PINO == PIN_2){ //essa parte é pra o do pedestre ficar verde quando o do carro ficar vermelho msm sem solicitacao
-		GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
-	}
+
 	for(int i = 0; i < 100; i++){
 		if(GPIO_Read_Pin(GPIOA, PIN_0) == 1 && pedestre == 1) break;
 		Delay_ms(30);
 	}
 	GPIO_Write_Pin(GPIOA, PIN_4, LOW);
-	GPIO_Write_Pin(GPIOA, PIN_3, LOW);
 
 	GPIO_Toggle_Pin(GPIOA, PINO);
 
