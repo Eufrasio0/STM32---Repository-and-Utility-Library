@@ -6,7 +6,7 @@
 #include "LCD_Blio.h"
 
 //Declaracao das flags
-volatile int flag = 0;
+volatile uint8_t flag = 0;
 volatile int pedestre= 0;
 volatile int cont=0;
 
@@ -123,7 +123,8 @@ void EXTI3_IRQHandler(){
 }
 
 void EXTI4_IRQHandler(){
-	flag = !flag;
+	Delay_ms(10);
+	GPIO_Toggle_Pin(GPIOA, PIN_1);
 	EXTI_Clear_Pending(EXTI4);
 }
 
@@ -155,7 +156,6 @@ void questao1(){
 		GPIO_Toggle_Pin(GPIOA, PIN_0);
 		Delay_ms(250);
 	}
-
 }
 
 void questao3(){
@@ -339,51 +339,91 @@ void questao11(){
 	GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
 
 	int mascaras[16] = {
-			0b1011111, //0
-			0b1010000, //1
-			0b0111011, //2
-			0b0101111, //3
-			0b1100110, //4
-			0b1101101, //5
-			0b1111101, //6
-			0b0000111, //7
-			0b1111111, //8
-			0b1101111, //9
-			0b1110111, //A
-			0b1111111, //B
-			0b1011001, //C
-			0b1011111, //D
-			0b1111001, //E
-			0b1110001 //F
+	    0b1000000, // 0
+	    0b1111001, // 1
+	    0b0100100, // 2
+	    0b0110000, // 3
+	    0b0011001, // 4
+	    0b0010010, // 5
+	    0b0000010, // 6
+	    0b1111000, // 7
+	    0b0000000, // 8
+	    0b0010000, // 9
+	    0b0001000, // A
+	    0b0000000, // B
+	    0b1000110, // C
+	    0b1000000, // D
+	    0b0000110, // E
+	    0b0001110  // F
 	};
+
+
 	while(1){
 		for(int i = 0; i < 16;i++){
 			GPIOA->BSRR = (0b1111111 << 16);
 			GPIOA->BSRR = mascaras[i];
 			Delay_ms(1000);
 		}
+		for(int i = 16; i != 0;i--){
+			GPIOA->BSRR = (0b1111111 << 16);
+			GPIOA->BSRR = mascaras[i];
+			Delay_ms(1000);
+		}
+
 	}
 }
 
-void questao12(){
-	 char *texto[] = {"0", "1", "2", "3", "4","5", "6", "7", "8", "9", "10"};
-	while(1){
-		LCD_Init(4, 20);
-		LCD_Clear();
-		LCD_Write_String(1, 1, "Eufrasio");
-		LCD_Write_String(2, 1, "Arruda");
-		LCD_Write_String(3, 1, "Neto");
-		for (int i = 0; i < 10; i++)
-		{
-			LCD_Write_String(4, 1, texto[i]);
-			Delay_ms(1000);
-		}
-	}
+void questao12(void){
+	/*Definições da porta e dos pinos para o LCD
+	#define LCD_PORT	GPIOD
+	#define LCD_RS_PIN	PIN_0
+	#define LCD_E_PIN	PIN_1
+	#define LCD_D4_PIN	PIN_2
+	#define LCD_D5_PIN	PIN_3
+	#define LCD_D6_PIN	PIN_4
+	#define LCD_D7_PIN	PIN_5
+	| LCD          | Função               | STM32F407 |
+| ------------ | -------------------- | --------- |
+| **1 - VSS**  | GND                  | **GND**   |
+| **2 - VDD**  | Alimentação          | **5 V**   |
+| **3 - VO**   | Contraste            | **PA4**   |
+| **4 - RS**   | Seleção comando/dado | **PD0**   |
+| **5 - RW**   | Leitura/escrita      | **GND**   |
+| **6 - E**    | Enable               | **PD1**   |
+| **11 - DB4** | Dados                | **PD2**   |
+| **12 - DB5** | Dados                | **PD3**   |
+| **13 - DB6** | Dados                | **PD4**   |
+| **14 - DB7** | Dados                | **PD5**   |
+| **15 - A**   | Backlight +          | **5 V**   |
+| **16 - K**   | Backlight −          | **GND**   |
+
+*/
+    char *texto[] = {
+        "0", "1", "2", "3", "4", "5",
+        "6", "7", "8", "9", "10"
+    };
+
+    LCD_Init(4, 20);
+    LCD_Clear();
+
+    LCD_Write_String(1, 1, "Eufrasio");
+    LCD_Write_String(2, 1, "Arruda");
+    LCD_Write_String(3, 1, "Neto");
+
+    while(1)
+    {
+        for(int i = 0; i <= 10; i++)
+        {
+            LCD_Write_String(4, 1, texto[i]);
+            Delay_ms(1000);
+
+            LCD_Write_String(4, 1, "                    ");
+        }
+    }
 }
 
 void questao13(){
 	Utility_Init(); //Inicia o uso da biblioteca
-
 	GPIO_Clock_Enable(GPIOA); //Ativa a porta A
 
 	GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
@@ -410,23 +450,16 @@ void questao13(){
 void questao15()
 {
     GPIO_Clock_Enable(GPIOA);
+    GPIO_Clock_Enable(GPIOE);
 
-    GPIO_Pin_Mode(GPIOA, PIN_4, INPUT);
+
+    GPIO_Pin_Mode(GPIOE, PIN_4, INPUT);
     GPIO_Pin_Mode(GPIOA, PIN_1, OUTPUT);
 
-    GPIO_Resistor_Enable(GPIOA, PIN_4, PULL_UP);
+    GPIO_Resistor_Enable(GPIOE, PIN_4, PULL_UP);
 
-	EXTI_Config(EXTI4, GPIOA, FALLING_EDGE);
+	EXTI_Config(EXTI4, GPIOE, FALLING_EDGE);
 	NVIC_EnableIRQ(EXTI4_IRQn);
-    while(1){
-		if(flag == 1){
-			GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
-		}
-		else {
-			GPIO_Write_Pin(GPIOA, PIN_1, LOW);
-
-		}
-    }
 
 }
 
@@ -486,22 +519,22 @@ void questao19(){
 	     GPIO_Pin_Mode(GPIOB, PIN_6, OUTPUT);
 
 	     int mascara[] = {
-	 			0b1011111, //0
-	 			0b1010000, //1
-	 			0b0111011, //2
-	 			0b0101111, //3
-	 			0b1100110, //4
-	 			0b1101101, //5
-	 			0b1111101, //6
-	 			0b0000111, //7
-	 			0b1111111, //8
-	 			0b1101111, //9
-	 			0b1110111, //A
-	 			0b1111111, //B
-	 			0b1011001, //C
-	 			0b1011111, //D
-	 			0b1111001, //E
-	 			0b1110001 //F
+	    		    0b1000000, // 0
+	    		    0b1111001, // 1
+	    		    0b0100100, // 2
+	    		    0b0110000, // 3
+	    		    0b0011001, // 4
+	    		    0b0010010, // 5
+	    		    0b0000010, // 6
+	    		    0b1111000, // 7
+	    		    0b0000000, // 8
+	    		    0b0010000, // 9
+	    		    0b0001000, // A
+	    		    0b0000000, // B
+	    		    0b1000110, // C
+	    		    0b1000000, // D
+	    		    0b0000110, // E
+	    		    0b0001110  // F
 	     };
 
 	     while(1)
@@ -548,5 +581,7 @@ void questao19(){
 	         }
 	     }
 	 }
+
+
 
 #endif /*ATVVAVALIATIVAONE_H_*/

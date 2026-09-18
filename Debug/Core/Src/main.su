@@ -58,8 +58,8 @@
 ../Core/Inc/AtvvAvaliativaOne.h:102:6:EXTI2_IRQHandler	8	static
 ../Core/Inc/AtvvAvaliativaOne.h:120:6:EXTI3_IRQHandler	8	static
 ../Core/Inc/AtvvAvaliativaOne.h:125:6:EXTI4_IRQHandler	8	static
-../Core/Inc/AtvvAvaliativaOne.h:130:6:servomotor	32	static
-../Core/Inc/AtvvAvaliativaOne.h:146:6:questao1	8	static
+../Core/Inc/AtvvAvaliativaOne.h:131:6:servomotor	32	static
+../Core/Inc/AtvvAvaliativaOne.h:147:6:questao1	8	static
 ../Core/Inc/AtvvAvaliativaOne.h:161:6:questao3	16	static
 ../Core/Inc/AtvvAvaliativaOne.h:178:6:questao5	16	static
 ../Core/Inc/AtvvAvaliativaOne.h:196:6:questao7	16	static
@@ -67,11 +67,11 @@
 ../Core/Inc/AtvvAvaliativaOne.h:262:6:questao9	8	static
 ../Core/Inc/AtvvAvaliativaOne.h:295:6:questao10	8	static
 ../Core/Inc/AtvvAvaliativaOne.h:330:6:questao11	88	static
-../Core/Inc/AtvvAvaliativaOne.h:368:6:questao12	64	static
-../Core/Inc/AtvvAvaliativaOne.h:384:6:questao13	16	static
-../Core/Inc/AtvvAvaliativaOne.h:410:6:questao15	8	static
-../Core/Inc/AtvvAvaliativaOne.h:433:6:questao17	8	static
-../Core/Inc/AtvvAvaliativaOne.h:465:6:questao19	104	static
+../Core/Inc/AtvvAvaliativaOne.h:376:6:questao12	64	static
+../Core/Inc/AtvvAvaliativaOne.h:402:6:questao13	16	static
+../Core/Inc/AtvvAvaliativaOne.h:427:6:questao15	8	static
+../Core/Inc/AtvvAvaliativaOne.h:443:6:questao17	8	static
+../Core/Inc/AtvvAvaliativaOne.h:475:6:questao19	104	static
 ../Core/Inc/BibUSTM32.h:8:6:escalaMusical	16	static
 ../Core/Inc/BibUSTM32.h:30:6:servo	32	static
 ../Core/Inc/BibUSTM32.h:47:6:PWM_LED	24	static
