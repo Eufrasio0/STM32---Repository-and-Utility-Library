@@ -3,6 +3,7 @@
 
 #include "stm32f4xx.h"
 #include "Utility.h"
+#include "LCD_Blio.h"
 
 //Declaracao das flags
 volatile int flag = 0;
@@ -68,7 +69,7 @@ void semaforo(int PINO){
 	if(PINO == PIN_0 || PINO == PIN_1){
 		GPIO_Write_Pin(GPIOA, PIN_4, HIGH);
 	}
-	if(PINO == PIN_2){
+	if(PINO == PIN_2){ //essa parte é pra o do pedestre ficar verde quando o do carro ficar vermelho msm sem solicitacao
 		GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
 	}
 	for(int i = 0; i < 100; i++){
@@ -362,6 +363,22 @@ void questao11(){
 		for(int i = 0; i < 16;i++){
 			GPIOA->BSRR = (0b1111111 << 16);
 			GPIOA->BSRR = mascaras[i];
+			Delay_ms(1000);
+		}
+	}
+}
+
+void questao12(){
+	 char *texto[] = {"0", "1", "2", "3", "4","5", "6", "7", "8", "9", "10"};
+	while(1){
+		LCD_Init(4, 20);
+		LCD_Clear();
+		LCD_Write_String(1, 1, "Eufrasio");
+		LCD_Write_String(2, 1, "Arruda");
+		LCD_Write_String(3, 1, "Neto");
+		for (int i = 0; i < 10; i++)
+		{
+			LCD_Write_String(4, 1, texto[i]);
 			Delay_ms(1000);
 		}
 	}
