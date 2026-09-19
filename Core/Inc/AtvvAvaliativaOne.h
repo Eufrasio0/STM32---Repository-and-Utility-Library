@@ -10,6 +10,22 @@ volatile uint8_t flag = 0;
 volatile int pedestre= 0;
 volatile int cont=0;
 
+int rotina_de_espera()
+{
+	TIM2_Setup();
+    TIM2->CNT = 0;
+
+    while (TIM2->CNT < 1000000)
+    {
+        if (GPIO_Read_Pin(GPIOE, PIN_3) == 0)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 void frequencia(GPIO_TypeDef* GPIOx, uint8_t PINO ,int freq)
 {
     GPIO_Clock_Enable(GPIOx);
@@ -412,7 +428,7 @@ void questao12(void){
 
     while(1)
     {
-        for(int i = 0; i <= 10; i++)
+        for(int i = 10; i != 0; i)
         {
             LCD_Write_String(4, 1, texto[i]);
             Delay_ms(1000);
@@ -421,6 +437,9 @@ void questao12(void){
         }
     }
 }
+
+
+
 
 void questao13(){
 	Utility_Init(); //Inicia o uso da biblioteca
@@ -461,7 +480,32 @@ void questao15()
 	EXTI_Config(EXTI4, GPIOE, FALLING_EDGE);
 	NVIC_EnableIRQ(EXTI4_IRQn);
 
+
 }
+
+void questao16()
+{
+    GPIO_Clock_Enable(GPIOE);
+
+    GPIO_Pin_Mode(GPIOE, PIN_2, OUTPUT);
+    GPIO_Pin_Mode(GPIOE, PIN_3, INPUT);  // K1
+    GPIO_Pin_Mode(GPIOE, PIN_4, INPUT);  // K0
+
+    GPIO_Resistor_Enable(GPIOE, PIN_3, PULL_UP);
+    GPIO_Resistor_Enable(GPIOE, PIN_4, PULL_UP);
+
+    while (1)
+    {
+    	if (GPIO_Read_Pin(GPIOE, PIN_4) == 0) // K0 pressionado
+    	{
+    	    if (rotina_de_espera() == 1)      // K1 pressionado em até 1 s
+    	    {
+    	        GPIO_Toggle_Pin(GPIOE, PIN_2);
+    	    }
+    	}
+    }
+}
+
 
 void questao17(){
 
@@ -495,92 +539,222 @@ void questao17(){
 }
 
 
-void questao19(){
-	     GPIO_Clock_Enable(GPIOA);
-	     GPIO_Clock_Enable(GPIOB);
+void questao19()
+{
+    GPIO_Clock_Enable(GPIOA);
+    GPIO_Clock_Enable(GPIOD);
 
-	     // Linhas
-	     GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
-	     GPIO_Pin_Mode(GPIOA, PIN_1, OUTPUT);
-	     GPIO_Pin_Mode(GPIOA, PIN_2, OUTPUT);
-	     GPIO_Pin_Mode(GPIOA, PIN_3, OUTPUT);
-	     // colunas
-	     GPIO_Pin_Mode(GPIOA, PIN_4, INPUT);
-	     GPIO_Pin_Mode(GPIOA, PIN_5, INPUT);
-	     GPIO_Pin_Mode(GPIOA, PIN_6, INPUT);
-	     GPIO_Pin_Mode(GPIOA, PIN_7, INPUT);
-	     // parte do display
-	     GPIO_Pin_Mode(GPIOB, PIN_0, OUTPUT);
-	     GPIO_Pin_Mode(GPIOB, PIN_1, OUTPUT);
-	     GPIO_Pin_Mode(GPIOB, PIN_2, OUTPUT);
-	     GPIO_Pin_Mode(GPIOB, PIN_3, OUTPUT);
-	     GPIO_Pin_Mode(GPIOB, PIN_4, OUTPUT);
-	     GPIO_Pin_Mode(GPIOB, PIN_5, OUTPUT);
-	     GPIO_Pin_Mode(GPIOB, PIN_6, OUTPUT);
+    // ==========================================
+    // TECLADO - LINHAS PA0 a PA3
+    // Open-drain + pull-up
+    // ==========================================
 
-	     int mascara[] = {
-	    		    0b1000000, // 0
-	    		    0b1111001, // 1
-	    		    0b0100100, // 2
-	    		    0b0110000, // 3
-	    		    0b0011001, // 4
-	    		    0b0010010, // 5
-	    		    0b0000010, // 6
-	    		    0b1111000, // 7
-	    		    0b0000000, // 8
-	    		    0b0010000, // 9
-	    		    0b0001000, // A
-	    		    0b0000000, // B
-	    		    0b1000110, // C
-	    		    0b1000000, // D
-	    		    0b0000110, // E
-	    		    0b0001110  // F
-	     };
+    GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_1, OUTPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_2, OUTPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_3, OUTPUT);
 
-	     while(1)
-	     {
-	         for(int linha = 0; linha < 4; linha++){
-	             GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
-	             GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
-	             GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
-	             GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
+    GPIO_Output_Type(GPIOA, PIN_0, OPEN_DRAIN);
+    GPIO_Output_Type(GPIOA, PIN_1, OPEN_DRAIN);
+    GPIO_Output_Type(GPIOA, PIN_2, OPEN_DRAIN);
+    GPIO_Output_Type(GPIOA, PIN_3, OPEN_DRAIN);
 
-	             GPIO_Write_Pin(GPIOA, linha, LOW);
+    GPIO_Resistor_Enable(GPIOA, PIN_0, PULL_UP);
+    GPIO_Resistor_Enable(GPIOA, PIN_1, PULL_UP);
+    GPIO_Resistor_Enable(GPIOA, PIN_2, PULL_UP);
+    GPIO_Resistor_Enable(GPIOA, PIN_3, PULL_UP);
 
-	             if(GPIO_Read_Pin(GPIOA, PIN_4) == LOW)
-	             {
-	                 int tecla = linha * 4 + 0;
 
-	                 if(tecla <= 9)
-	                     GPIOB->BSRR = (0x7F << 16) | mascara[tecla];
-	             }
+    // ==========================================
+    // TECLADO - COLUNAS PA4 a PA7
+    // Input + pull-up
+    // ==========================================
 
-	             if(GPIO_Read_Pin(GPIOA, PIN_5) == LOW)
-	             {
-	                 int tecla = linha * 4 + 1;
+    GPIO_Pin_Mode(GPIOA, PIN_4, INPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_5, INPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_6, INPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_7, INPUT);
 
-	                 if(tecla <= 9)
-	                     GPIOB->BSRR = (0x7F << 16) | mascara[tecla];
-	             }
+    GPIO_Resistor_Enable(GPIOA, PIN_4, PULL_UP);
+    GPIO_Resistor_Enable(GPIOA, PIN_5, PULL_UP);
+    GPIO_Resistor_Enable(GPIOA, PIN_6, PULL_UP);
+    GPIO_Resistor_Enable(GPIOA, PIN_7, PULL_UP);
 
-	             if(GPIO_Read_Pin(GPIOA, PIN_6) == LOW)
-	             {
-	                 int tecla = linha * 4 + 2;
 
-	                 if(tecla <= 9)
-	                     GPIOB->BSRR = (0x7F << 16) | mascara[tecla];
-	             }
+    // ==========================================
+    // DISPLAY - PD0 a PD6
+    // ==========================================
 
-	             if(GPIO_Read_Pin(GPIOA, PIN_7) == LOW)
-	             {
-	                 int tecla = linha * 4 + 3;
+    GPIO_Pin_Mode(GPIOD, PIN_0, OUTPUT);
+    GPIO_Pin_Mode(GPIOD, PIN_1, OUTPUT);
+    GPIO_Pin_Mode(GPIOD, PIN_2, OUTPUT);
+    GPIO_Pin_Mode(GPIOD, PIN_3, OUTPUT);
+    GPIO_Pin_Mode(GPIOD, PIN_4, OUTPUT);
+    GPIO_Pin_Mode(GPIOD, PIN_5, OUTPUT);
+    GPIO_Pin_Mode(GPIOD, PIN_6, OUTPUT);
 
-	                 if(tecla <= 9)
-	                     GPIOB->BSRR = (0x7F << 16) | mascara[tecla];
-	             }
-	         }
-	     }
-	 }
+
+    // ==========================================
+    // VALORES DO DISPLAY
+    // ==========================================
+
+    int mascara[] = {
+
+        0b1000000, // 0
+        0b1111001, // 1
+        0b0100100, // 2
+        0b0110000, // 3
+        0b0011001, // 4
+        0b0010010, // 5
+        0b0000010, // 6
+        0b1111000, // 7
+        0b0000000, // 8
+        0b0010000, // 9
+        0b0001000, // A
+        0b0000000, // B
+        0b1000110, // C
+        0b1000000, // D
+        0b0000110, // E
+        0b0001110  // F
+    };
+
+
+    // ==========================================
+    // VALORES ESPERADOS NO GPIOA
+    //
+    // PA0-PA3 = linhas
+    // PA4-PA7 = colunas
+    //
+    // Uma linha = LOW
+    // Uma coluna = LOW quando tecla pressionada
+    // ==========================================
+
+    int situ[] = {
+
+        0b11001110, // 1
+        0b11011110, // 2
+        0b10111110, // 3
+        0b01111110, // A
+
+        0b11001101, // 4
+        0b11011101, // 5
+        0b10111101, // 6
+        0b01111101, // B
+
+        0b11001011, // 7
+        0b11011011, // 8
+        0b10111011, // 9
+        0b01111011, // C
+
+        0b11000111, // *
+        0b11010111, // 0
+        0b10110111, // #
+        0b01110111  // D
+    };
+
+
+    while(1)
+    {
+        int leitura;
+
+
+        // ==========================================
+        // LINHA 0 ATIVA
+        // PA0 = LOW
+        // PA1, PA2, PA3 = HIGH (soltas)
+        // ==========================================
+
+        GPIO_Write_Pin(GPIOA, PIN_0, LOW);
+        GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
+        GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
+        GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
+
+        Delay_us(10);
+
+        leitura = GPIO_Read_Port(GPIOA) & 0xFF;
+
+        for(int i = 0; i < 4; i++)
+        {
+            if(leitura == situ[i])
+            {
+                GPIOD->BSRR = (0x7F << 16);
+                GPIOD->BSRR = mascara[i];
+            }
+        }
+
+
+        // ==========================================
+        // LINHA 1 ATIVA
+        // PA1 = LOW
+        // ==========================================
+
+        GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
+        GPIO_Write_Pin(GPIOA, PIN_1, LOW);
+        GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
+        GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
+
+        Delay_us(10);
+
+        leitura = GPIO_Read_Port(GPIOA) & 0xFF;
+
+        for(int i = 4; i < 8; i++)
+        {
+            if(leitura == situ[i])
+            {
+                GPIOD->BSRR = (0x7F << 16);
+                GPIOD->BSRR = mascara[i];
+            }
+        }
+
+
+        // ==========================================
+        // LINHA 2 ATIVA
+        // PA2 = LOW
+        // ==========================================
+
+        GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
+        GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
+        GPIO_Write_Pin(GPIOA, PIN_2, LOW);
+        GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
+
+        Delay_us(10);
+
+        leitura = GPIO_Read_Port(GPIOA) & 0xFF;
+
+        for(int i = 8; i < 12; i++)
+        {
+            if(leitura == situ[i])
+            {
+                GPIOD->BSRR = (0x7F << 16);
+                GPIOD->BSRR = mascara[i];
+            }
+        }
+
+
+        // ==========================================
+        // LINHA 3 ATIVA
+        // PA3 = LOW
+        // ==========================================
+
+        GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
+        GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
+        GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
+        GPIO_Write_Pin(GPIOA, PIN_3, LOW);
+
+        Delay_us(10);
+
+        leitura = GPIO_Read_Port(GPIOA) & 0xFF;
+
+        for(int i = 12; i < 16; i++)
+        {
+            if(leitura == situ[i])
+            {
+                GPIOD->BSRR = (0x7F << 16);
+                GPIOD->BSRR = mascara[i];
+            }
+        }
+    }
+}
 
 
 
