@@ -26,6 +26,22 @@ int rotina_de_espera()
     return 0;
 }
 
+int distancia(int Trigger, int Echo){
+
+	uint32_t retorno = 0;
+
+	GPIO_Write_Pin(GPIOA, Trigger, HIGH);
+	Delay_ms(10);
+	GPIO_Write_Pin(GPIOA, Echo, LOW);
+
+	while(!GPIO_Read_Pin(GPIOA, Echo));
+	while(GPIO_Read_Pin(GPIOA, Echo) && retorno < 23200){
+		retorno++;
+		Delay_ms(1);
+	}
+	return retorno/58;
+}
+
 void frequencia(GPIO_TypeDef* GPIOx, uint8_t PINO ,int freq)
 {
     GPIO_Clock_Enable(GPIOx);
@@ -390,30 +406,7 @@ void questao11(){
 }
 
 void questao12(void){
-	/*Definições da porta e dos pinos para o LCD
-	#define LCD_PORT	GPIOD
-	#define LCD_RS_PIN	PIN_0
-	#define LCD_E_PIN	PIN_1
-	#define LCD_D4_PIN	PIN_2
-	#define LCD_D5_PIN	PIN_3
-	#define LCD_D6_PIN	PIN_4
-	#define LCD_D7_PIN	PIN_5
-	| LCD          | Função               | STM32F407 |
-| ------------ | -------------------- | --------- |
-| **1 - VSS**  | GND                  | **GND**   |
-| **2 - VDD**  | Alimentação          | **5 V**   |
-| **3 - VO**   | Contraste            | **PA4**   |
-| **4 - RS**   | Seleção comando/dado | **PD0**   |
-| **5 - RW**   | Leitura/escrita      | **GND**   |
-| **6 - E**    | Enable               | **PD1**   |
-| **11 - DB4** | Dados                | **PD2**   |
-| **12 - DB5** | Dados                | **PD3**   |
-| **13 - DB6** | Dados                | **PD4**   |
-| **14 - DB7** | Dados                | **PD5**   |
-| **15 - A**   | Backlight +          | **5 V**   |
-| **16 - K**   | Backlight −          | **GND**   |
 
-*/
     char *texto[] = {
         "0", "1", "2", "3", "4", "5",
         "6", "7", "8", "9", "10"
@@ -426,10 +419,8 @@ void questao12(void){
     LCD_Write_String(2, 1, "Arruda");
     LCD_Write_String(3, 1, "Neto");
 
-    while(1)
-    {
-        for(int i = 10; i != 0; i)
-        {
+    while(1){
+        for(int i = 10; i != 0; i++){
             LCD_Write_String(4, 1, texto[i]);
             Delay_ms(1000);
 
@@ -483,10 +474,8 @@ void questao15()
 
 }
 
-void questao16()
-{
+void questao16(){
     GPIO_Clock_Enable(GPIOE);
-
     GPIO_Pin_Mode(GPIOE, PIN_2, OUTPUT);
     GPIO_Pin_Mode(GPIOE, PIN_3, INPUT);  // K1
     GPIO_Pin_Mode(GPIOE, PIN_4, INPUT);  // K0
@@ -496,13 +485,14 @@ void questao16()
 
     while (1)
     {
-    	if (GPIO_Read_Pin(GPIOE, PIN_4) == 0) // K0 pressionado
-    	{
-    	    if (rotina_de_espera() == 1)      // K1 pressionado em até 1 s
-    	    {
-    	        GPIO_Toggle_Pin(GPIOE, PIN_2);
+    	if (GPIO_Read_Pin(GPIOE, PIN_4) == 0){
+    	    if (rotina_de_espera() == 1){
+    	        GPIO_Write_Pin(GPIOE, PIN_2, HIGH);
     	    }
     	}
+        GPIO_Write_Pin(GPIOE, PIN_2, LOW);
+
+
     }
 }
 
@@ -753,6 +743,29 @@ void questao19()
                 GPIOD->BSRR = mascara[i];
             }
         }
+    }
+}
+
+void questao20(){
+    GPIO_Clock_Enable(GPIOA);
+    GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT); // trigger
+    GPIO_Pin_Mode(GPIOA, PIN_1, INPUT); // echo
+    GPIO_Pin_Mode(GPIOA, PIN_2, OUTPUT); // buzzer
+
+    while(1){
+    	int dist = distancia( PIN_0, PIN_1);
+
+    	if(dist <= 20){
+    		GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
+    		Delay_ms(100);
+    		GPIO_Write_Pin(GPIOA, PIN_2, LOW);
+    		Delay_ms(100);
+    	} else if(dist > 20 && dist < 40){
+    		GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
+    		Delay_ms(500);
+    		GPIO_Write_Pin(GPIOA, PIN_2, LOW);
+    		Delay_ms(500);
+    	}
     }
 }
 
