@@ -23,9 +23,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, DATA
   9 .ccmram       00000000  10000000  10000000  0000300c  2**0
                   CONTENTS
- 10 .bss          00000028  2000000c  2000000c  0000300c  2**2
+ 10 .bss          00000024  2000000c  2000000c  0000300c  2**2
                   ALLOC
- 11 ._user_heap_stack 00000604  20000034  20000034  0000300c  2**0
+ 11 ._user_heap_stack 00000600  20000030  20000030  0000300c  2**0
                   ALLOC
  12 .ARM.attributes 00000030  00000000  00000000  0000300c  2**0
                   CONTENTS, READONLY
@@ -530,7 +530,7 @@ Disassembly of section .text:
  8000678:	2003      	movs	r0, #3
  800067a:	f7ff ffe9 	bl	8000650 <piscar_led>
  800067e:	e7f5      	b.n	800066c <EXTI0_IRQHandler+0x4>
- 8000680:	2000002c 	.word	0x2000002c
+ 8000680:	20000028 	.word	0x20000028
 
 08000684 <EXTI1_IRQHandler>:
  8000684:	b510      	push	{r4, lr}
@@ -544,7 +544,7 @@ Disassembly of section .text:
  8000694:	2004      	movs	r0, #4
  8000696:	f7ff ffdb 	bl	8000650 <piscar_led>
  800069a:	e7f5      	b.n	8000688 <EXTI1_IRQHandler+0x4>
- 800069c:	2000002c 	.word	0x2000002c
+ 800069c:	20000028 	.word	0x20000028
 
 080006a0 <EXTI2_IRQHandler>:
  80006a0:	4b15      	ldr	r3, [pc, #84]	@ (80006f8 <EXTI2_IRQHandler+0x58>)
@@ -585,83 +585,85 @@ Disassembly of section .text:
  80006f4:	6153      	str	r3, [r2, #20]
  80006f6:	4770      	bx	lr
  80006f8:	40020000 	.word	0x40020000
- 80006fc:	2000002c 	.word	0x2000002c
+ 80006fc:	20000028 	.word	0x20000028
  8000700:	40013c00 	.word	0x40013c00
 
 08000704 <EXTI3_IRQHandler>:
  8000704:	4b04      	ldr	r3, [pc, #16]	@ (8000718 <EXTI3_IRQHandler+0x14>)
- 8000706:	2201      	movs	r2, #1
- 8000708:	601a      	str	r2, [r3, #0]
- 800070a:	4a04      	ldr	r2, [pc, #16]	@ (800071c <EXTI3_IRQHandler+0x18>)
- 800070c:	6953      	ldr	r3, [r2, #20]
- 800070e:	f043 0308 	orr.w	r3, r3, #8
- 8000712:	6153      	str	r3, [r2, #20]
- 8000714:	4770      	bx	lr
- 8000716:	bf00      	nop
+ 8000706:	781b      	ldrb	r3, [r3, #0]
+ 8000708:	2b01      	cmp	r3, #1
+ 800070a:	bf01      	itttt	eq
+ 800070c:	4a03      	ldreq	r2, [pc, #12]	@ (800071c <EXTI3_IRQHandler+0x18>)
+ 800070e:	6953      	ldreq	r3, [r2, #20]
+ 8000710:	f043 0304 	orreq.w	r3, r3, #4
+ 8000714:	6153      	streq	r3, [r2, #20]
+ 8000716:	4770      	bx	lr
  8000718:	20000028 	.word	0x20000028
- 800071c:	40013c00 	.word	0x40013c00
+ 800071c:	40021000 	.word	0x40021000
 
 08000720 <EXTI4_IRQHandler>:
- 8000720:	b508      	push	{r3, lr}
- 8000722:	200a      	movs	r0, #10
- 8000724:	f7ff ff53 	bl	80005ce <Delay_ms>
- 8000728:	4a05      	ldr	r2, [pc, #20]	@ (8000740 <EXTI4_IRQHandler+0x20>)
- 800072a:	6953      	ldr	r3, [r2, #20]
- 800072c:	f083 0302 	eor.w	r3, r3, #2
- 8000730:	6153      	str	r3, [r2, #20]
- 8000732:	f5a2 4244 	sub.w	r2, r2, #50176	@ 0xc400
- 8000736:	6953      	ldr	r3, [r2, #20]
- 8000738:	f043 0310 	orr.w	r3, r3, #16
- 800073c:	6153      	str	r3, [r2, #20]
- 800073e:	bd08      	pop	{r3, pc}
- 8000740:	40020000 	.word	0x40020000
+ 8000720:	b510      	push	{r4, lr}
+ 8000722:	f7ff ff3b 	bl	800059c <TIM2_Setup>
+ 8000726:	f04f 4280 	mov.w	r2, #1073741824	@ 0x40000000
+ 800072a:	2300      	movs	r3, #0
+ 800072c:	6253      	str	r3, [r2, #36]	@ 0x24
+ 800072e:	4905      	ldr	r1, [pc, #20]	@ (8000744 <EXTI4_IRQHandler+0x24>)
+ 8000730:	4b05      	ldr	r3, [pc, #20]	@ (8000748 <EXTI4_IRQHandler+0x28>)
+ 8000732:	2401      	movs	r4, #1
+ 8000734:	6a50      	ldr	r0, [r2, #36]	@ 0x24
+ 8000736:	4288      	cmp	r0, r1
+ 8000738:	d902      	bls.n	8000740 <EXTI4_IRQHandler+0x20>
+ 800073a:	2200      	movs	r2, #0
+ 800073c:	701a      	strb	r2, [r3, #0]
+ 800073e:	bd10      	pop	{r4, pc}
+ 8000740:	701c      	strb	r4, [r3, #0]
+ 8000742:	e7f7      	b.n	8000734 <EXTI4_IRQHandler+0x14>
+ 8000744:	000f423f 	.word	0x000f423f
+ 8000748:	20000028 	.word	0x20000028
 
-08000744 <questao16>:
- 8000744:	4c1c      	ldr	r4, [pc, #112]	@ (80007b8 <questao16+0x74>)
- 8000746:	b508      	push	{r3, lr}
- 8000748:	4620      	mov	r0, r4
- 800074a:	f7ff ff4b 	bl	80005e4 <GPIO_Clock_Enable>
- 800074e:	6823      	ldr	r3, [r4, #0]
- 8000750:	f023 0330 	bic.w	r3, r3, #48	@ 0x30
- 8000754:	6023      	str	r3, [r4, #0]
+0800074c <questao16_1>:
+ 800074c:	4c1a      	ldr	r4, [pc, #104]	@ (80007b8 <questao16_1+0x6c>)
+ 800074e:	b508      	push	{r3, lr}
+ 8000750:	4620      	mov	r0, r4
+ 8000752:	f7ff ff47 	bl	80005e4 <GPIO_Clock_Enable>
  8000756:	6823      	ldr	r3, [r4, #0]
- 8000758:	f043 0310 	orr.w	r3, r3, #16
+ 8000758:	f023 0330 	bic.w	r3, r3, #48	@ 0x30
  800075c:	6023      	str	r3, [r4, #0]
  800075e:	6823      	ldr	r3, [r4, #0]
- 8000760:	f023 03c0 	bic.w	r3, r3, #192	@ 0xc0
+ 8000760:	f043 0310 	orr.w	r3, r3, #16
  8000764:	6023      	str	r3, [r4, #0]
  8000766:	6823      	ldr	r3, [r4, #0]
- 8000768:	6023      	str	r3, [r4, #0]
- 800076a:	6823      	ldr	r3, [r4, #0]
- 800076c:	f423 7340 	bic.w	r3, r3, #768	@ 0x300
+ 8000768:	f023 03c0 	bic.w	r3, r3, #192	@ 0xc0
+ 800076c:	6023      	str	r3, [r4, #0]
+ 800076e:	6823      	ldr	r3, [r4, #0]
  8000770:	6023      	str	r3, [r4, #0]
  8000772:	6823      	ldr	r3, [r4, #0]
- 8000774:	6023      	str	r3, [r4, #0]
- 8000776:	68e3      	ldr	r3, [r4, #12]
- 8000778:	f023 03c0 	bic.w	r3, r3, #192	@ 0xc0
- 800077c:	60e3      	str	r3, [r4, #12]
+ 8000774:	f423 7340 	bic.w	r3, r3, #768	@ 0x300
+ 8000778:	6023      	str	r3, [r4, #0]
+ 800077a:	6823      	ldr	r3, [r4, #0]
+ 800077c:	6023      	str	r3, [r4, #0]
  800077e:	68e3      	ldr	r3, [r4, #12]
- 8000780:	f043 0340 	orr.w	r3, r3, #64	@ 0x40
+ 8000780:	f023 03c0 	bic.w	r3, r3, #192	@ 0xc0
  8000784:	60e3      	str	r3, [r4, #12]
  8000786:	68e3      	ldr	r3, [r4, #12]
- 8000788:	f423 7340 	bic.w	r3, r3, #768	@ 0x300
+ 8000788:	f043 0340 	orr.w	r3, r3, #64	@ 0x40
  800078c:	60e3      	str	r3, [r4, #12]
  800078e:	68e3      	ldr	r3, [r4, #12]
- 8000790:	f443 7380 	orr.w	r3, r3, #256	@ 0x100
+ 8000790:	f423 7340 	bic.w	r3, r3, #768	@ 0x300
  8000794:	60e3      	str	r3, [r4, #12]
- 8000796:	6923      	ldr	r3, [r4, #16]
- 8000798:	06db      	lsls	r3, r3, #27
- 800079a:	d407      	bmi.n	80007ac <questao16+0x68>
- 800079c:	f7ff ff40 	bl	8000620 <rotina_de_espera>
- 80007a0:	2801      	cmp	r0, #1
- 80007a2:	bf02      	ittt	eq
- 80007a4:	6963      	ldreq	r3, [r4, #20]
- 80007a6:	f043 0304 	orreq.w	r3, r3, #4
- 80007aa:	6163      	streq	r3, [r4, #20]
+ 8000796:	68e3      	ldr	r3, [r4, #12]
+ 8000798:	f443 7380 	orr.w	r3, r3, #256	@ 0x100
+ 800079c:	60e3      	str	r3, [r4, #12]
+ 800079e:	6923      	ldr	r3, [r4, #16]
+ 80007a0:	06db      	lsls	r3, r3, #27
+ 80007a2:	d4fc      	bmi.n	800079e <questao16_1+0x52>
+ 80007a4:	f7ff ff3c 	bl	8000620 <rotina_de_espera>
+ 80007a8:	2801      	cmp	r0, #1
+ 80007aa:	d1f8      	bne.n	800079e <questao16_1+0x52>
  80007ac:	6963      	ldr	r3, [r4, #20]
- 80007ae:	f023 0304 	bic.w	r3, r3, #4
+ 80007ae:	f083 0304 	eor.w	r3, r3, #4
  80007b2:	6163      	str	r3, [r4, #20]
- 80007b4:	e7ef      	b.n	8000796 <questao16+0x52>
+ 80007b4:	e7f3      	b.n	800079e <questao16_1+0x52>
  80007b6:	bf00      	nop
  80007b8:	40021000 	.word	0x40021000
 
@@ -742,7 +744,7 @@ Disassembly of section .text:
  800087a:	f003 0380 	and.w	r3, r3, #128	@ 0x80
  800087e:	9301      	str	r3, [sp, #4]
  8000880:	9b01      	ldr	r3, [sp, #4]
- 8000882:	f7ff ff5f 	bl	8000744 <questao16>
+ 8000882:	f7ff ff63 	bl	800074c <questao16_1>
  8000886:	bf00      	nop
  8000888:	40023800 	.word	0x40023800
 
@@ -844,7 +846,7 @@ Disassembly of section .text:
  800092c:	2000000c 	.word	0x2000000c
  8000930:	0800100c 	.word	0x0800100c
  8000934:	2000000c 	.word	0x2000000c
- 8000938:	20000034 	.word	0x20000034
+ 8000938:	20000030 	.word	0x20000030
 
 0800093c <ADC_IRQHandler>:
  800093c:	e7fe      	b.n	800093c <ADC_IRQHandler>
@@ -909,7 +911,7 @@ Disassembly of section .text:
  80009c6:	6013      	str	r3, [r2, #0]
  80009c8:	4770      	bx	lr
  80009ca:	bf00      	nop
- 80009cc:	20000030 	.word	0x20000030
+ 80009cc:	2000002c 	.word	0x2000002c
  80009d0:	20000004 	.word	0x20000004
 
 080009d4 <HAL_GetTick>:
@@ -917,7 +919,7 @@ Disassembly of section .text:
  80009d6:	6818      	ldr	r0, [r3, #0]
  80009d8:	4770      	bx	lr
  80009da:	bf00      	nop
- 80009dc:	20000030 	.word	0x20000030
+ 80009dc:	2000002c 	.word	0x2000002c
 
 080009e0 <HAL_NVIC_SetPriorityGrouping>:
  80009e0:	4907      	ldr	r1, [pc, #28]	@ (8000a00 <HAL_NVIC_SetPriorityGrouping+0x20>)

@@ -7,6 +7,8 @@
 
 //Declaracao das flags
 volatile uint8_t flag = 0;
+volatile uint8_t flag_seg = 0;
+
 volatile int pedestre= 0;
 volatile int cont=0;
 
@@ -150,14 +152,33 @@ void EXTI2_IRQHandler(){
 }
 
 void EXTI3_IRQHandler(){
-	pedestre = 1;
+	/*pedestre = 1;
 	EXTI_Clear_Pending(EXTI3);
+	questao do semaforo
+	*/
+
+	if(flag == 1){
+		GPIO_Write_Pin(GPIOE, PIN_2, HIGH);
+	}
+
+
 }
 
 void EXTI4_IRQHandler(){
+	/*
 	Delay_ms(10);
 	GPIO_Toggle_Pin(GPIOA, PIN_1);
 	EXTI_Clear_Pending(EXTI4);
+
+	questao do semaforo*/
+	TIM2_Setup();
+	    TIM2->CNT = 0;
+
+	    while (TIM2->CNT < 1000000){
+	    	flag = 1;
+	    }
+	    flag = 0;
+
 }
 
 void servomotor(GPIO_TypeDef* GPIOx, uint8_t PINO, int angulo){
@@ -474,27 +495,65 @@ void questao15()
 
 }
 
-void questao16(){
+void questao16(void){
     GPIO_Clock_Enable(GPIOE);
+
     GPIO_Pin_Mode(GPIOE, PIN_2, OUTPUT);
-    GPIO_Pin_Mode(GPIOE, PIN_3, INPUT);  // K1
-    GPIO_Pin_Mode(GPIOE, PIN_4, INPUT);  // K0
+    GPIO_Pin_Mode(GPIOE, PIN_3, INPUT);   // K1
+    GPIO_Pin_Mode(GPIOE, PIN_4, INPUT);   // K0
 
     GPIO_Resistor_Enable(GPIOE, PIN_3, PULL_UP);
     GPIO_Resistor_Enable(GPIOE, PIN_4, PULL_UP);
 
+    TIM2_Setup();
+    GPIO_Write_Pin(GPIOE, PIN_2, LOW);
+
     while (1)
     {
-    	if (GPIO_Read_Pin(GPIOE, PIN_4) == 0){
-    	    if (rotina_de_espera() == 1){
-    	        GPIO_Write_Pin(GPIOE, PIN_2, HIGH);
-    	    }
-    	}
+        flag_K0 = 0;
+        flag_K1 = 0;
+        sequencia_valida = 0;
+
+        if (GPIO_Read_Pin(GPIOE, PIN_3) == 0)
+        {
+            continue;
+        }
+        while (GPIO_Read_Pin(GPIOE, PIN_4) != 0)
+        {
+            if (GPIO_Read_Pin(GPIOE, PIN_3) == 0)
+            {
+                flag_K1 = 1;
+                break;
+            }
+        }
+        if (flag_K1 == 1)
+        {
+            continue;
+        }
+        flag_K0 = 1;
+        TIM2->CNT = 0;
+        while (TIM2->CNT < 1000000)
+        {
+            if (GPIO_Read_Pin(GPIOE, PIN_3) == 0)
+            {
+                flag_K1 = 1;
+                sequencia_valida = 1;
+                break;
+            }
+        }
+        if ((flag_K0 == 1) && (flag_K1 == 1) && (sequencia_valida == 1))
+        {
+            GPIO_Write_Pin(GPIOE, PIN_2, HIGH);
+        }
+        while ((GPIO_Read_Pin(GPIOE, PIN_3) == 0) ||(GPIO_Read_Pin(GPIOE, PIN_4) == 0)){
+
+        }
         GPIO_Write_Pin(GPIOE, PIN_2, LOW);
 
-
     }
+
 }
+
 
 
 void questao17(){
@@ -534,11 +593,6 @@ void questao19()
     GPIO_Clock_Enable(GPIOA);
     GPIO_Clock_Enable(GPIOD);
 
-    // ==========================================
-    // TECLADO - LINHAS PA0 a PA3
-    // Open-drain + pull-up
-    // ==========================================
-
     GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
     GPIO_Pin_Mode(GPIOA, PIN_1, OUTPUT);
     GPIO_Pin_Mode(GPIOA, PIN_2, OUTPUT);
@@ -555,11 +609,6 @@ void questao19()
     GPIO_Resistor_Enable(GPIOA, PIN_3, PULL_UP);
 
 
-    // ==========================================
-    // TECLADO - COLUNAS PA4 a PA7
-    // Input + pull-up
-    // ==========================================
-
     GPIO_Pin_Mode(GPIOA, PIN_4, INPUT);
     GPIO_Pin_Mode(GPIOA, PIN_5, INPUT);
     GPIO_Pin_Mode(GPIOA, PIN_6, INPUT);
@@ -570,11 +619,6 @@ void questao19()
     GPIO_Resistor_Enable(GPIOA, PIN_6, PULL_UP);
     GPIO_Resistor_Enable(GPIOA, PIN_7, PULL_UP);
 
-
-    // ==========================================
-    // DISPLAY - PD0 a PD6
-    // ==========================================
-
     GPIO_Pin_Mode(GPIOD, PIN_0, OUTPUT);
     GPIO_Pin_Mode(GPIOD, PIN_1, OUTPUT);
     GPIO_Pin_Mode(GPIOD, PIN_2, OUTPUT);
@@ -582,11 +626,6 @@ void questao19()
     GPIO_Pin_Mode(GPIOD, PIN_4, OUTPUT);
     GPIO_Pin_Mode(GPIOD, PIN_5, OUTPUT);
     GPIO_Pin_Mode(GPIOD, PIN_6, OUTPUT);
-
-
-    // ==========================================
-    // VALORES DO DISPLAY
-    // ==========================================
 
     int mascara[] = {
 
@@ -607,17 +646,6 @@ void questao19()
         0b0000110, // E
         0b0001110  // F
     };
-
-
-    // ==========================================
-    // VALORES ESPERADOS NO GPIOA
-    //
-    // PA0-PA3 = linhas
-    // PA4-PA7 = colunas
-    //
-    // Uma linha = LOW
-    // Uma coluna = LOW quando tecla pressionada
-    // ==========================================
 
     int situ[] = {
 
@@ -642,17 +670,9 @@ void questao19()
         0b01110111  // D
     };
 
-
-    while(1)
+    while (1)
     {
         int leitura;
-
-
-        // ==========================================
-        // LINHA 0 ATIVA
-        // PA0 = LOW
-        // PA1, PA2, PA3 = HIGH (soltas)
-        // ==========================================
 
         GPIO_Write_Pin(GPIOA, PIN_0, LOW);
         GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
@@ -663,20 +683,14 @@ void questao19()
 
         leitura = GPIO_Read_Port(GPIOA) & 0xFF;
 
-        for(int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++)
         {
-            if(leitura == situ[i])
+            if (leitura == situ[i])
             {
                 GPIOD->BSRR = (0x7F << 16);
                 GPIOD->BSRR = mascara[i];
             }
         }
-
-
-        // ==========================================
-        // LINHA 1 ATIVA
-        // PA1 = LOW
-        // ==========================================
 
         GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
         GPIO_Write_Pin(GPIOA, PIN_1, LOW);
@@ -687,20 +701,14 @@ void questao19()
 
         leitura = GPIO_Read_Port(GPIOA) & 0xFF;
 
-        for(int i = 4; i < 8; i++)
+        for (int i = 4; i < 8; i++)
         {
-            if(leitura == situ[i])
+            if (leitura == situ[i])
             {
                 GPIOD->BSRR = (0x7F << 16);
                 GPIOD->BSRR = mascara[i];
             }
         }
-
-
-        // ==========================================
-        // LINHA 2 ATIVA
-        // PA2 = LOW
-        // ==========================================
 
         GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
         GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
@@ -711,20 +719,14 @@ void questao19()
 
         leitura = GPIO_Read_Port(GPIOA) & 0xFF;
 
-        for(int i = 8; i < 12; i++)
+        for (int i = 8; i < 12; i++)
         {
-            if(leitura == situ[i])
+            if (leitura == situ[i])
             {
                 GPIOD->BSRR = (0x7F << 16);
                 GPIOD->BSRR = mascara[i];
             }
         }
-
-
-        // ==========================================
-        // LINHA 3 ATIVA
-        // PA3 = LOW
-        // ==========================================
 
         GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
         GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
@@ -735,9 +737,9 @@ void questao19()
 
         leitura = GPIO_Read_Port(GPIOA) & 0xFF;
 
-        for(int i = 12; i < 16; i++)
+        for (int i = 12; i < 16; i++)
         {
-            if(leitura == situ[i])
+            if (leitura == situ[i])
             {
                 GPIOD->BSRR = (0x7F << 16);
                 GPIOD->BSRR = mascara[i];
