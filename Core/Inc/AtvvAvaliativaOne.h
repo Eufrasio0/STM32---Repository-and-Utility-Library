@@ -1064,7 +1064,7 @@ void questao20(){
     while(1){
     	int dist = distancia( PIN_0, PIN_1);
 		printf("distancia em cm: %d\n", dist);
-		Delay_ms(200)
+		Delay_ms(200);
 
     }
 }
