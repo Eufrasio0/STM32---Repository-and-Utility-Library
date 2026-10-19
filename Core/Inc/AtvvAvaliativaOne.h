@@ -4,6 +4,7 @@
 #include "stm32f4xx.h"
 #include "Utility.h"
 #include "LCD_Blio.h"
+#include "stdio.h"
 
 //Declaracao das flags
 volatile uint8_t flag = 0;
@@ -11,6 +12,65 @@ volatile uint8_t flag_seg = 0;
 
 volatile int pedestre= 0;
 volatile int cont=0;
+
+volatile int flag_K0;
+volatile int flag_K1;
+volatile int sequencia_valida;
+
+
+char Keypad_Read(void)
+{
+    // Linha 0
+    GPIO_Write_Pin(GPIOA, PIN_0, LOW);
+    GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
+    GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
+    GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
+
+    Delay_us(10);
+
+    if (GPIO_Read_Pin(GPIOA, PIN_4) == LOW) return '1';
+    if (GPIO_Read_Pin(GPIOA, PIN_5) == LOW) return '2';
+    if (GPIO_Read_Pin(GPIOA, PIN_6) == LOW) return '3';
+    if (GPIO_Read_Pin(GPIOA, PIN_7) == LOW) return 'A';
+
+
+    // Linha 1
+    GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
+    GPIO_Write_Pin(GPIOA, PIN_1, LOW);
+
+    Delay_us(10);
+
+    if (GPIO_Read_Pin(GPIOA, PIN_4) == LOW) return '4';
+    if (GPIO_Read_Pin(GPIOA, PIN_5) == LOW) return '5';
+    if (GPIO_Read_Pin(GPIOA, PIN_6) == LOW) return '6';
+    if (GPIO_Read_Pin(GPIOA, PIN_7) == LOW) return 'B';
+
+
+    // Linha 2
+    GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
+    GPIO_Write_Pin(GPIOA, PIN_2, LOW);
+
+    Delay_us(10);
+
+    if (GPIO_Read_Pin(GPIOA, PIN_4) == LOW) return '7';
+    if (GPIO_Read_Pin(GPIOA, PIN_5) == LOW) return '8';
+    if (GPIO_Read_Pin(GPIOA, PIN_6) == LOW) return '9';
+    if (GPIO_Read_Pin(GPIOA, PIN_7) == LOW) return 'C';
+
+
+    // Linha 3
+    GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
+    GPIO_Write_Pin(GPIOA, PIN_3, LOW);
+
+    Delay_us(10);
+
+    if (GPIO_Read_Pin(GPIOA, PIN_4) == LOW) return '*';
+    if (GPIO_Read_Pin(GPIOA, PIN_5) == LOW) return '0';
+    if (GPIO_Read_Pin(GPIOA, PIN_6) == LOW) return '#';
+    if (GPIO_Read_Pin(GPIOA, PIN_7) == LOW) return 'D';
+
+    return 0;
+}
 
 int rotina_de_espera()
 {
@@ -28,20 +88,26 @@ int rotina_de_espera()
     return 0;
 }
 
-int distancia(int Trigger, int Echo){
+int distancia(int Trigger, int Echo)
+{
+    uint32_t retorno = 0;
 
-	uint32_t retorno = 0;
+    GPIO_Write_Pin(GPIOA, Trigger, LOW);
+    Delay_ms(1);
 
-	GPIO_Write_Pin(GPIOA, Trigger, HIGH);
-	Delay_ms(10);
-	GPIO_Write_Pin(GPIOA, Echo, LOW);
+    GPIO_Write_Pin(GPIOA, Trigger, HIGH);
+    Delay_us(10);
+    GPIO_Write_Pin(GPIOA, Trigger, LOW);
 
-	while(!GPIO_Read_Pin(GPIOA, Echo));
-	while(GPIO_Read_Pin(GPIOA, Echo) && retorno < 23200){
-		retorno++;
-		Delay_ms(1);
-	}
-	return retorno/58;
+    while (!GPIO_Read_Pin(GPIOA, Echo));
+
+    while (GPIO_Read_Pin(GPIOA, Echo) && retorno < 23200)
+    {
+        retorno++;
+        Delay_us(1);
+    }
+
+    return retorno / 58;
 }
 
 void frequencia(GPIO_TypeDef* GPIOx, uint8_t PINO ,int freq)
@@ -381,52 +447,52 @@ void questao10(){
 
 
 void questao11(){
-	GPIO_Clock_Enable(GPIOA);
+	GPIO_Clock_Enable(GPIOD);
 //os pinos estao na ordem alfabetica
-	GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
-	GPIO_Pin_Mode(GPIOA, PIN_1, OUTPUT);
-	GPIO_Pin_Mode(GPIOA, PIN_2, OUTPUT);
-	GPIO_Pin_Mode(GPIOA, PIN_3, OUTPUT);
-	GPIO_Pin_Mode(GPIOA, PIN_4, OUTPUT);
-	GPIO_Pin_Mode(GPIOA, PIN_5, OUTPUT);
-	GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_0, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_1, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_2, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_3, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_4, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_5, OUTPUT);
+	GPIO_Pin_Mode(GPIOD, PIN_6, OUTPUT);
 
 	int mascaras[16] = {
-	    0b1000000, // 0
-	    0b1111001, // 1
-	    0b0100100, // 2
-	    0b0110000, // 3
-	    0b0011001, // 4
-	    0b0010010, // 5
-	    0b0000010, // 6
-	    0b1111000, // 7
-	    0b0000000, // 8
-	    0b0010000, // 9
-	    0b0001000, // A
-	    0b0000000, // B
-	    0b1000110, // C
-	    0b1000000, // D
-	    0b0000110, // E
-	    0b0001110  // F
-	};
+		    0b1000000, // 0
+		    0b1111001, // 1
+		    0b0100100, // 2
+		    0b0110000, // 3
+		    0b0011001, // 4
+		    0b0010010, // 5
+		    0b0000010, // 6
+		    0b1111000, // 7
+		    0b0000000, // 8
+		    0b0010000, // 9
+		    0b0001000, // A
+		    0b0000000, // B
+		    0b1000110, // C
+		    0b1000000, // D
+		    0b0000110, // E
+		    0b0001110  // F
+		};
 
 
 	while(1){
 		for(int i = 0; i < 16;i++){
-			GPIOA->BSRR = (0b1111111 << 16);
-			GPIOA->BSRR = mascaras[i];
+			GPIOD->BSRR = (0b1111111 << 16);
+			GPIOD->BSRR = mascaras[i];
 			Delay_ms(1000);
 		}
 		for(int i = 16; i != 0;i--){
-			GPIOA->BSRR = (0b1111111 << 16);
-			GPIOA->BSRR = mascaras[i];
+			GPIOD->BSRR = (0b1111111 << 16);
+			GPIOD->BSRR = mascaras[i];
 			Delay_ms(1000);
 		}
 
 	}
 }
 
-void questao12(void){
+void questao12(){
 
     char *texto[] = {
         "0", "1", "2", "3", "4", "5",
@@ -495,7 +561,7 @@ void questao15()
 
 }
 
-void questao16(void){
+void questao16(){
     GPIO_Clock_Enable(GPIOE);
 
     GPIO_Pin_Mode(GPIOE, PIN_2, OUTPUT);
@@ -587,7 +653,7 @@ void questao17(){
 	NVIC_SetPriority(EXTI2_IRQn, 0);
 }
 
-
+/*
 void questao19()
 {
     GPIO_Clock_Enable(GPIOA);
@@ -608,17 +674,17 @@ void questao19()
     GPIO_Resistor_Enable(GPIOA, PIN_2, PULL_UP);
     GPIO_Resistor_Enable(GPIOA, PIN_3, PULL_UP);
 
+    GPIO_Resistor_Enable(GPIOA, PIN_4, PULL_UP);
+    GPIO_Resistor_Enable(GPIOA, PIN_5, PULL_UP);
+    GPIO_Resistor_Enable(GPIOA, PIN_6, PULL_UP);
+    GPIO_Resistor_Enable(GPIOA, PIN_7, PULL_UP);
 
     GPIO_Pin_Mode(GPIOA, PIN_4, INPUT);
     GPIO_Pin_Mode(GPIOA, PIN_5, INPUT);
     GPIO_Pin_Mode(GPIOA, PIN_6, INPUT);
     GPIO_Pin_Mode(GPIOA, PIN_7, INPUT);
 
-    GPIO_Resistor_Enable(GPIOA, PIN_4, PULL_UP);
-    GPIO_Resistor_Enable(GPIOA, PIN_5, PULL_UP);
-    GPIO_Resistor_Enable(GPIOA, PIN_6, PULL_UP);
-    GPIO_Resistor_Enable(GPIOA, PIN_7, PULL_UP);
-
+    //display
     GPIO_Pin_Mode(GPIOD, PIN_0, OUTPUT);
     GPIO_Pin_Mode(GPIOD, PIN_1, OUTPUT);
     GPIO_Pin_Mode(GPIOD, PIN_2, OUTPUT);
@@ -647,105 +713,78 @@ void questao19()
         0b0001110  // F
     };
 
-    int situ[] = {
-
-        0b11001110, // 1
-        0b11011110, // 2
-        0b10111110, // 3
-        0b01111110, // A
-
-        0b11001101, // 4
-        0b11011101, // 5
-        0b10111101, // 6
-        0b01111101, // B
-
-        0b11001011, // 7
-        0b11011011, // 8
-        0b10111011, // 9
-        0b01111011, // C
-
-        0b11000111, // *
-        0b11010111, // 0
-        0b10110111, // #
-        0b01110111  // D
-    };
-
     while (1)
     {
-        int leitura;
+        char tecla;
 
-        GPIO_Write_Pin(GPIOA, PIN_0, LOW);
-        GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
-        GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
-        GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
+        tecla = Keypad_Read();
 
-        Delay_us(10);
+			if (tecla == '1'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[1];
+			}
+			else if(tecla == '0'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[0];
+			}
+			else if(tecla == '2'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[2];
+			}
+			else if(tecla == '3'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[3];
+			}
+			else if(tecla == '4'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[4];
+			}
+			else if(tecla == '5'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[5];
+			}
+			else if(tecla == '6'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[6];
+			}
+			else if(tecla == '7'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[7];
+			}
+			else if(tecla == '8'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[8];
+			}
+			else if(tecla == '9'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[9];
+			}
+			else if(tecla == "A"){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[10];
+			}
+			else if(tecla == 'B'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[11];
+			}
+			else if(tecla == 'C'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[12];
+			}
+			else if(tecla == 'D'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[13];
+			}
+			else if(tecla == '*'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[14];
+			}
+			else if(tecla == '#'){
+				GPIOA->BSRR = (0b1111111 << 16);
+				GPIOA->BSRR = mascara[15];
+			}
 
-        leitura = GPIO_Read_Port(GPIOA) & 0xFF;
-
-        for (int i = 0; i < 4; i++)
-        {
-            if (leitura == situ[i])
-            {
-                GPIOD->BSRR = (0x7F << 16);
-                GPIOD->BSRR = mascara[i];
-            }
         }
-
-        GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
-        GPIO_Write_Pin(GPIOA, PIN_1, LOW);
-        GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
-        GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
-
-        Delay_us(10);
-
-        leitura = GPIO_Read_Port(GPIOA) & 0xFF;
-
-        for (int i = 4; i < 8; i++)
-        {
-            if (leitura == situ[i])
-            {
-                GPIOD->BSRR = (0x7F << 16);
-                GPIOD->BSRR = mascara[i];
-            }
-        }
-
-        GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
-        GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
-        GPIO_Write_Pin(GPIOA, PIN_2, LOW);
-        GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
-
-        Delay_us(10);
-
-        leitura = GPIO_Read_Port(GPIOA) & 0xFF;
-
-        for (int i = 8; i < 12; i++)
-        {
-            if (leitura == situ[i])
-            {
-                GPIOD->BSRR = (0x7F << 16);
-                GPIOD->BSRR = mascara[i];
-            }
-        }
-
-        GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
-        GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
-        GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
-        GPIO_Write_Pin(GPIOA, PIN_3, LOW);
-
-        Delay_us(10);
-
-        leitura = GPIO_Read_Port(GPIOA) & 0xFF;
-
-        for (int i = 12; i < 16; i++)
-        {
-            if (leitura == situ[i])
-            {
-                GPIOD->BSRR = (0x7F << 16);
-                GPIOD->BSRR = mascara[i];
-            }
-        }
-    }
 }
 
 void questao20(){
@@ -759,15 +798,274 @@ void questao20(){
 
     	if(dist <= 20){
     		GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
-    		Delay_ms(100);
+    		Delay_ms(50);
     		GPIO_Write_Pin(GPIOA, PIN_2, LOW);
-    		Delay_ms(100);
+    		Delay_ms(50);
     	} else if(dist > 20 && dist < 40){
     		GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
-    		Delay_ms(500);
+    		Delay_ms(300);
     		GPIO_Write_Pin(GPIOA, PIN_2, LOW);
-    		Delay_ms(500);
+    		Delay_ms(300);
+    	} else if(dist >= 40 && dist <= 50){
+    		GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
+    		Delay_ms(600);
+    		GPIO_Write_Pin(GPIOA, PIN_2, LOW);
+    		Delay_ms(600);
+
     	}
+    	else if(dist >= 50){
+    	}
+    }
+}
+*/
+void Display_Write(uint8_t value)
+{
+    // Desliga os 7 segmentos
+    GPIOD->BSRR = (0x7F << 16);
+
+    // Escreve a nova máscara
+    GPIOD->BSRR = value;
+}
+
+
+
+void valuesKey(uint8_t i, uint8_t j)
+    {
+
+	uint8_t values[16] = {
+	    0b0100000, // 0
+	    0b1111001, // 1
+	    0b0100100, // 2
+	    0b0110000, // 3
+	    0b0011001, // 4
+	    0b0010010, // 5
+	    0b0000010, // 6
+	    0b1111000, // 7
+	    0b0000000, // 8
+	    0b0010000, // 9
+	    0b0001000, // A
+	    0b0000011, // B
+	    0b1000110, // C
+	    0b0100001, // D
+	    0b0000110, // E
+	    0b0001110  // F
+	};
+        // 1 2 3
+        // 4 5 6
+        // 7 8 9
+        if (j < 3 && i < 3)
+        {
+            GPIOD->BSRR = (0b1111111 << 16);
+            GPIOD->BSRR = values[i * 3 + j + 1];
+
+            return;
+        }
+
+        // Última linha: * 0 # D
+        if (i == 3)
+        {
+            switch (j)
+            {
+                case 0:
+                    // *
+                    GPIOD->BSRR = (0b1111111 << 16);
+                    GPIOD->BSRR = values[14];
+                    break;
+
+                case 1:
+                    // 0
+                    GPIOD->BSRR = (0b1111111 << 16);
+                    GPIOD->BSRR = values[0];
+                    break;
+
+                case 2:
+                    // #
+                    GPIOD->BSRR = (0b1111111 << 16);
+                    GPIOD->BSRR = values[15];
+                    break;
+
+                case 3:
+                    // D
+                    GPIOD->BSRR = (0b1111111 << 16);
+                    GPIOD->BSRR = values[13];
+                    break;
+            }
+        }
+
+        // Última coluna: A B C D
+        else if (j == 3)
+        {
+            switch (i)
+            {
+                case 0:
+                    // A
+                    GPIOD->BSRR = (0b1111111 << 16);
+                    GPIOD->BSRR = values[10];
+                    break;
+
+                case 1:
+                    // B
+                    GPIOD->BSRR = (0b1111111 << 16);
+                    GPIOD->BSRR = values[11];
+                    break;
+
+                case 2:
+                    // C
+                    GPIOD->BSRR = (0b1111111 << 16);
+                    GPIOD->BSRR = values[12];
+                    break;
+
+                case 3:
+                    // D
+                    GPIOD->BSRR = (0b1111111 << 16);
+                    GPIOD->BSRR = values[13];
+                    break;
+            }
+        }
+    }
+
+
+void questao19()
+{
+
+
+
+    // -----------------------------------------------------
+    // Função para descobrir qual valor deve aparecer
+    // -----------------------------------------------------
+
+
+
+    // -----------------------------------------------------
+    // Inicialização
+    // -----------------------------------------------------
+
+    GPIO_Clock_Enable(GPIOA);
+    GPIO_Clock_Enable(GPIOD);
+
+
+    // -----------------------------------------------------
+    // PA0 - PA3 = LINHAS
+    // -----------------------------------------------------
+
+    for (uint8_t i = 0; i < 4; i++)
+    {
+        GPIO_Pin_Mode(GPIOA, i, OUTPUT);
+
+        GPIO_Output_Type(
+            GPIOA,
+            i,
+            OPEN_DRAIN
+        );
+
+        GPIO_Resistor_Enable(
+            GPIOA,
+            i,
+            PULL_UP
+        );
+
+        // Inicialmente todas as linhas desligadas
+        GPIO_Write_Pin(
+            GPIOA,
+            i,
+            HIGH
+        );
+    }
+
+
+    // -----------------------------------------------------
+    // PA4 - PA7 = COLUNAS
+    // -----------------------------------------------------
+
+    for (uint8_t i = 0; i < 4; i++)
+    {
+        GPIO_Pin_Mode(
+            GPIOA,
+            4 + i,
+            INPUT
+        );
+
+        GPIO_Resistor_Enable(
+            GPIOA,
+            4 + i,
+            PULL_UP
+        );
+    }
+
+
+    // -----------------------------------------------------
+    // DISPLAY
+    // -----------------------------------------------------
+
+    for (uint8_t i = 0; i < 7; i++)
+    {
+        GPIO_Pin_Mode(
+            GPIOD,
+            i,
+            OUTPUT
+        );
+    }
+
+
+    // -----------------------------------------------------
+    // VARREDURA
+    // -----------------------------------------------------
+
+    while (1)
+    {
+        for (uint8_t i = 0; i < 4; i++)
+        {
+            // Todas as linhas em HIGH
+            GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
+            GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
+            GPIO_Write_Pin(GPIOA, PIN_2, HIGH);
+            GPIO_Write_Pin(GPIOA, PIN_3, HIGH);
+
+            // Linha atual em LOW
+            GPIO_Write_Pin(
+                GPIOA,
+                i,
+                LOW
+            );
+
+            Delay_us(10);
+
+
+            // Lê as quatro colunas
+            for (uint8_t j = 0; j < 4; j++)
+            {
+                /*
+                 * Como as colunas possuem PULL-UP:
+                 *
+                 * nenhuma tecla = HIGH
+                 * tecla pressionada = LOW
+                 */
+                if (GPIO_Read_Pin(
+                        GPIOA,
+                        4 + j
+                    ) == LOW)
+                {
+                    valuesKey(i, j);
+
+                    Delay_us(20000);
+                }
+            }
+        }
+    }
+}
+
+void questao20(){
+    GPIO_Clock_Enable(GPIOA);
+    GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT); // trigger
+    GPIO_Pin_Mode(GPIOA, PIN_1, INPUT); // echo
+    GPIO_Pin_Mode(GPIOA, PIN_2, OUTPUT); // buzzer
+    USART1_Init();
+
+    while(1){
+    	int dist = distancia( PIN_0, PIN_1);
+		printf("distancia em cm: %d\n", dist);
+		Delay_ms(200)
+
     }
 }
 

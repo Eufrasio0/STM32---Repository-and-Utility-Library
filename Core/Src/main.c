@@ -21,6 +21,7 @@
 #include "Utility.h"
 #include "AtvvAvaliativaOne.h"
 #include "BibUSTM32.h"
+#include "stdio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -164,6 +165,198 @@ void mudar_prioridade(){
 	marcador++;
 }
 
+#include <stdint.h>
+#define SINE_SAMPLES 100
+
+
+
+void aula09_10(){
+	DAC_Init1(DAC_CHANNEL2);
+
+
+	const uint16_t senoide[SINE_SAMPLES] = {
+			  2048, 2176, 2304, 2431, 2557, 2681, 2802, 2921, 3037, 3149,
+			    3257, 3361, 3460, 3554, 3643, 3726, 3803, 3874, 3938, 3995,
+			    4045, 4087, 4095, 4087, 4045, 3995, 3938, 3874, 3803, 3726,
+			    3643, 3554, 3460, 3361, 3257, 3149, 3037, 2921, 2802, 2681,
+			    2557, 2431, 2304, 2176, 2048, 1920, 1792, 1665, 1539, 1415,
+			    1294, 1175, 1059, 947, 839, 735, 636, 542, 453, 370,
+			    293, 222, 158, 101, 51, 9, 0, 9, 51, 101,
+			    158, 222, 293, 370, 453, 542, 636, 735, 839, 947,
+			    1059, 1175, 1294, 1415, 1539, 1665, 1792, 1920, 2048, 2176,
+			    2304, 2431, 2557, 2681, 2802, 2921, 3037, 3149, 3257, 3361
+	};
+
+	for(int i = 0; i < SINE_SAMPLES; i++){
+		DAC_SetValue(DAC_CHANNEL2, senoide[i], DAC_RES_12BITS);
+		Delay_us(20);
+	}
+
+}
+
+void teste_compiller(){
+	  GPIO_Clock_Enable(GPIOA);
+	  GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
+
+	  while (1)
+	  {
+	      GPIO_Toggle_Pin(GPIOA, PIN_6);
+	      Delay_ms(1000);
+	  }
+}
+
+void aula16_10(){
+
+    ADC_Init(ADC1, SINGLE_CHANNEL, ADC_RES_12BITS);
+    USART1_Init();
+
+    ADC_SingleChannel(ADC1, ADC_IN0);
+
+    uint16_t media[5];
+
+    while(1){
+        float total = 0;
+        for(int i = 0; i < 5; i++){
+            media[i] = ADC_GetSingleConversion(ADC1);
+            Delay_ms(2);
+        }
+        for(int i = 0; i < 5; i++){
+            total += media[i];
+        }
+        float media_bits = total / 5.0;
+        float tensao_media = (3.3 * media_bits) / 4095.0;
+        printf("Valor medio lido: %.2f V\n", tensao_media);
+
+        Delay_ms(200);
+    }
+}
+
+int distanciaa(int Trigger, int Echo)
+{
+    GPIO_Write_Pin(GPIOA, Trigger, LOW);
+    Delay_us(2);
+
+    GPIO_Write_Pin(GPIOA, Trigger, HIGH);
+    Delay_us(10);
+    GPIO_Write_Pin(GPIOA, Trigger, LOW);
+
+    uint32_t timeout = 30000;
+
+    // Espera o Echo ficar HIGH
+    while (!GPIO_Read_Pin(GPIOA, Echo) && timeout > 0)
+    {
+        Delay_us(1);
+        timeout--;
+    }
+
+    if (timeout == 0)
+    {
+        printf("ERRO: Echo nunca ficou HIGH\r\n");
+        return -1;
+    }
+
+    printf("Echo detectado!\r\n");
+
+    timeout = 30000;
+
+    // Espera o Echo voltar para LOW
+    printf("Echo detectado!\r\n");
+
+    Delay_ms(100);
+
+    if (GPIO_Read_Pin(GPIOA, Echo))
+    {
+        printf("PA1 continua HIGH apos 100 ms\r\n");
+    }
+    else
+    {
+        printf("PA1 voltou para LOW\r\n");
+    }
+
+    return 0;
+
+    if (timeout == 0)
+    {
+        printf("ERRO: Echo permaneceu HIGH\r\n");
+        return -1;
+    }
+
+    printf("Echo voltou para LOW\r\n");
+
+    return 0;
+}
+
+void testarEcho(void)
+{
+    GPIO_Clock_Enable(GPIOA);
+    GPIO_Pin_Mode(GPIOA, PIN_1, INPUT);
+
+    USART1_Init();
+
+    while (1)
+    {
+        printf("PA1 = %d\r\n",
+               GPIO_Read_Pin(GPIOA, PIN_1));
+
+        Delay_ms(500);
+    }
+}
+
+void rotinasensor(void)
+{
+    GPIO_Clock_Enable(GPIOA);
+
+    GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_1, INPUT);
+
+    USART1_Init();
+
+    while (1)
+    {
+        int dist = distanciaa(PIN_0, PIN_1);
+
+        if (dist >= 0)
+            printf("Distancia: %d cm\n", dist);
+        else
+            printf("Erro na leitura do sensor\n");
+
+        Delay_ms(1000);
+    }
+}
+
+void testarSensor(void)
+{
+    GPIO_Clock_Enable(GPIOA);
+
+    GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_1, INPUT);
+
+    USART1_Init();
+
+    while (1)
+    {
+        GPIO_Write_Pin(GPIOA, PIN_0, LOW);
+        Delay_ms(100);
+
+        printf("PA1 antes do trigger: %d\r\n",
+               GPIO_Read_Pin(GPIOA, PIN_1));
+
+        GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
+        Delay_us(10);
+        GPIO_Write_Pin(GPIOA, PIN_0, LOW);
+
+        Delay_ms(50);
+
+        printf("PA1 depois do trigger: %d\r\n",
+               GPIO_Read_Pin(GPIOA, PIN_1));
+
+        Delay_ms(1000);
+    }
+}
+
+
+
+
 
 
 
@@ -207,11 +400,7 @@ int main(void)
 
   /* Chame aqui a função referente a rotina */
 
-
-  questao16_2();
-
-
-
+  questao20();
   /* USER CODE END 2
    * Dó (C4): 261,63 HzRé (D4): 293,66 HzMi (E4): 329,63 HzFá (F4): 349,23 HzSol (G4): 392,00 HzLá (A4): 440,00 HzSi (B4): 493,88 Hz*/
 
