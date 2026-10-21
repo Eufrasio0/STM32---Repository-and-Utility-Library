@@ -356,6 +356,62 @@ void testarSensor(void)
 
 
 
+void aula21_10(void){
+
+    GPIO_Clock_Enable(GPIOA);
+    GPIO_Pin_Mode(GPIOA, PIN_1, OUTPUT);
+    ADC_Init(ADC1, SINGLE_CHANNEL, ADC_RES_12BITS);
+    USART1_Init();
+
+    ADC_SingleChannel(ADC1, ADC_IN0);
+
+    uint16_t media[15];
+    int angulo = 0;
+
+    while(1){
+
+        float total = 0;
+
+        for(int i = 0; i < 15; i++){
+            media[i] = ADC_GetSingleConversion(ADC1);
+        }
+
+        for(int i = 0; i < 15; i++){
+            total += media[i];
+        }
+
+        float media_bits = total / 15.0f;
+        float tensao_media = (3.3f * media_bits) / 4095.0f;
+
+        if(tensao_media > 3.0f && angulo < 180){
+            angulo += 30;
+            if(angulo > 180) angulo = 180;
+        }
+        else if(tensao_media < 1.0f && angulo > 0){
+            angulo -= 30;
+            if(angulo < 0) angulo = 0;
+        }
+        int pulso = 500 + (angulo * 2000) / 180;
+
+            GPIO_Write_Pin(GPIOA, PIN_1, HIGH);
+            Delay_us(pulso);
+
+            GPIO_Write_Pin(GPIOA, PIN_1, LOW);
+            Delay_us(20000 - pulso);
+
+
+        printf("{%.2f V", tensao_media);
+        printf("---", tensao_media);
+
+        printf("%d  graus ]\n", angulo);
+
+        Delay_ms(20);
+
+
+    }
+}
+
+
 
 
 
@@ -400,7 +456,7 @@ int main(void)
 
   /* Chame aqui a função referente a rotina */
 
-  questao20();
+  aula21_10();
   /* USER CODE END 2
    * Dó (C4): 261,63 HzRé (D4): 293,66 HzMi (E4): 329,63 HzFá (F4): 349,23 HzSol (G4): 392,00 HzLá (A4): 440,00 HzSi (B4): 493,88 Hz*/
 
