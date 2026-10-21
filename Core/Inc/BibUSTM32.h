@@ -139,7 +139,7 @@ void escalaMusical(GPIO_TypeDef* GPIOx, uint8_t PINO){
 }
 
 
-void servo(GPIO_TypeDef* GPIOx, uint8_t PINO, int angulo)
+void servoSetGrau(GPIO_TypeDef* GPIOx, uint8_t PINO, int angulo)
 {
     GPIO_Clock_Enable(GPIOx);
     GPIO_Pin_Mode(GPIOx, PINO, OUTPUT);
@@ -153,37 +153,6 @@ void servo(GPIO_TypeDef* GPIOx, uint8_t PINO, int angulo)
 
         GPIO_Write_Pin(GPIOx, PINO, LOW);
         Delay_us(20000 - pulso);
-    }
-}
-
-void PWM_LED(int tempo)
-{
-    int marc = 0;
-    GPIO_Clock_Enable(GPIOA);
-    GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
-
-
-    while(1)
-    {
-        GPIO_Write_Pin(GPIOA, PIN_6, HIGH);
-        Delay_us(tempo);
-
-        GPIO_Write_Pin(GPIOA, PIN_6, LOW);
-        Delay_us(10000 - tempo);
-
-        if(marc == 0)
-            tempo -= 100;
-
-        if(marc == 1)
-            tempo += 100;
-
-        if(tempo <= 0){
-            marc = 1;
-        }
-
-        if(tempo >= 10000){
-            marc = 0;
-        }
     }
 }
 
@@ -233,6 +202,45 @@ int getdistancia(int Trigger, int Echo)
 }
 
 
+void USART_Init(void){
+
+	//No serial monitor coloca o bound rate para 115200
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+    RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+    GPIOA->MODER &= ~((0b11U << 4) | (0b11U << 6));
+    GPIOA->MODER |=  ((0b10U << 4) | (0b10U << 6));
+
+    // 4. Seleciona AF7 para PA2 e PA3
+    GPIOA->AFR[0] &= ~((0b1111U << 8) | (0b1111U << 12));
+    GPIOA->AFR[0] |=  ((0b0111U << 8) | (0b0111U << 12));
+
+    // PCLK1 = 42 MHz; oversampling por 16
+    USART2->BRR = (42000000U + 57600U) / 115200U;
+    USART2->CR1 = USART_CR1_TE | USART_CR1_RE;
+    USART2->CR1 |= USART_CR1_UE;
+}
+
+void I2C_Init(GPIO_TypeDef* GPIOx, int SDA, int SCL){
+	if(GPIOx == GPIOA){
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	}
+	else if(GPIOx == GPIOB){
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
+
+	}else if(GPIOx == GPIOC){
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+
+	}else if(GPIOx == GPIOD){
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
+
+	}else if(GPIOx == GPIOE){
+		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
+
+	}
+	GPIOx->MODER |= (11 << SDA);
+	GPIOx->MODER |= (11 << SCL);
+
+}
 
 
 
