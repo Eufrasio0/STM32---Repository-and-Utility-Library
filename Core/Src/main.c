@@ -22,6 +22,10 @@
 #include "AtvvAvaliativaOne.h"
 #include "BibUSTM32.h"
 #include "stdio.h"
+#include "stdint.h"
+#include "voz_dac_8bits.h"
+
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -127,54 +131,15 @@ void aula_11_09(){
 	NVIC_SetPriority(EXTI0_IRQn, -2);
 }
 
-void rotina(){
-	for(int i = 0; i < 5;i++){
-		GPIO_Toggle_Pin(GPIOA, PIN_6);
-		Delay_ms(500);
-		GPIO_Toggle_Pin(GPIOA, PIN_6);
-		Delay_ms(500);
-	}
-}
-
-void rotina_secundaria(){
-	for(int i = 0; i < 25;i++){
-		GPIO_Toggle_Pin(GPIOA, PIN_7);
-		Delay_ms(50);
-		GPIO_Toggle_Pin(GPIOA, PIN_7);
-		Delay_ms(50);
-	}
-}
-int marcador = 0;
-
-void mudar_prioridade(){
-	if(marcador % 2 == 0){
-		GPIO_Write_Pin(GPIOA, PIN_6, LOW);
-		Delay_ms(100);
-		GPIO_Write_Pin(GPIOA, PIN_6, HIGH);
-
-		NVIC_SetPriority(EXTI3_IRQn, -1);
-		NVIC_SetPriority(EXTI4_IRQn, 0);
-	} else{
-		GPIO_Write_Pin(GPIOA, PIN_7, LOW);
-		Delay_ms(100);
-		GPIO_Write_Pin(GPIOA, PIN_7, HIGH);
-
-		NVIC_SetPriority(EXTI3_IRQn, 0);
-		NVIC_SetPriority(EXTI4_IRQn, -1);
-	}
-	marcador++;
-}
-
-#include <stdint.h>
-#define SINE_SAMPLES 100
-
-
-
 void aula09_10(){
+
+	//pa4 = dac1
+	//pa5 = dac2
+
 	DAC_Init1(DAC_CHANNEL2);
+	int SINE_SAMPLES = 100;
 
-
-	const uint16_t senoide[SINE_SAMPLES] = {
+	const uint16_t senoide[] = {
 			  2048, 2176, 2304, 2431, 2557, 2681, 2802, 2921, 3037, 3149,
 			    3257, 3361, 3460, 3554, 3643, 3726, 3803, 3874, 3938, 3995,
 			    4045, 4087, 4095, 4087, 4045, 3995, 3938, 3874, 3803, 3726,
@@ -192,17 +157,6 @@ void aula09_10(){
 		Delay_us(20);
 	}
 
-}
-
-void teste_compiller(){
-	  GPIO_Clock_Enable(GPIOA);
-	  GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
-
-	  while (1)
-	  {
-	      GPIO_Toggle_Pin(GPIOA, PIN_6);
-	      Delay_ms(1000);
-	  }
 }
 
 void aula16_10(){
@@ -231,129 +185,28 @@ void aula16_10(){
     }
 }
 
-int distanciaa(int Trigger, int Echo)
-{
-    GPIO_Write_Pin(GPIOA, Trigger, LOW);
-    Delay_us(2);
-
-    GPIO_Write_Pin(GPIOA, Trigger, HIGH);
-    Delay_us(10);
-    GPIO_Write_Pin(GPIOA, Trigger, LOW);
-
-    uint32_t timeout = 30000;
-
-    // Espera o Echo ficar HIGH
-    while (!GPIO_Read_Pin(GPIOA, Echo) && timeout > 0)
-    {
-        Delay_us(1);
-        timeout--;
-    }
-
-    if (timeout == 0)
-    {
-        printf("ERRO: Echo nunca ficou HIGH\r\n");
-        return -1;
-    }
-
-    printf("Echo detectado!\r\n");
-
-    timeout = 30000;
-
-    // Espera o Echo voltar para LOW
-    printf("Echo detectado!\r\n");
-
-    Delay_ms(100);
-
-    if (GPIO_Read_Pin(GPIOA, Echo))
-    {
-        printf("PA1 continua HIGH apos 100 ms\r\n");
-    }
-    else
-    {
-        printf("PA1 voltou para LOW\r\n");
-    }
-
-    return 0;
-
-    if (timeout == 0)
-    {
-        printf("ERRO: Echo permaneceu HIGH\r\n");
-        return -1;
-    }
-
-    printf("Echo voltou para LOW\r\n");
-
-    return 0;
-}
-
-void testarEcho(void)
-{
-    GPIO_Clock_Enable(GPIOA);
-    GPIO_Pin_Mode(GPIOA, PIN_1, INPUT);
-
-    USART1_Init();
-
-    while (1)
-    {
-        printf("PA1 = %d\r\n",
-               GPIO_Read_Pin(GPIOA, PIN_1));
-
-        Delay_ms(500);
-    }
-}
 
 void rotinasensor(void)
 {
     GPIO_Clock_Enable(GPIOA);
 
-    GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
-    GPIO_Pin_Mode(GPIOA, PIN_1, INPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT); //trigger
+    GPIO_Pin_Mode(GPIOA, PIN_1, INPUT); //echo
 
     USART1_Init();
 
     while (1)
     {
-        int dist = distanciaa(PIN_0, PIN_1);
+        int dist = getdistancia(PIN_0, PIN_1);
 
         if (dist >= 0)
-            printf("Distancia: %d cm\n", dist);
+            printf("Distancia: %d cm\r\n", dist);
         else
             printf("Erro na leitura do sensor\n");
 
         Delay_ms(1000);
     }
 }
-
-void testarSensor(void)
-{
-    GPIO_Clock_Enable(GPIOA);
-
-    GPIO_Pin_Mode(GPIOA, PIN_0, OUTPUT);
-    GPIO_Pin_Mode(GPIOA, PIN_1, INPUT);
-
-    USART1_Init();
-
-    while (1)
-    {
-        GPIO_Write_Pin(GPIOA, PIN_0, LOW);
-        Delay_ms(100);
-
-        printf("PA1 antes do trigger: %d\r\n",
-               GPIO_Read_Pin(GPIOA, PIN_1));
-
-        GPIO_Write_Pin(GPIOA, PIN_0, HIGH);
-        Delay_us(10);
-        GPIO_Write_Pin(GPIOA, PIN_0, LOW);
-
-        Delay_ms(50);
-
-        printf("PA1 depois do trigger: %d\r\n",
-               GPIO_Read_Pin(GPIOA, PIN_1));
-
-        Delay_ms(1000);
-    }
-}
-
 
 
 void aula21_10(void){
@@ -411,8 +264,381 @@ void aula21_10(void){
     }
 }
 
+void aula28_10(){
+
+    ADC_Init(ADC1, SINGLE_CHANNEL, ADC_RES_12BITS);
+    GPIO_Clock_Enable(GPIOA);
+    GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
+    USART1_Init();
+
+    ADC_SingleChannel(ADC1, ADC_IN0);
+
+    uint16_t media[5];
+
+    while(1){
+        float total = 0;
+        for(int i = 0; i < 5; i++){
+            media[i] = ADC_GetSingleConversion(ADC1);
+            Delay_ms(2);
+        }
+        for(int i = 0; i < 5; i++){
+            total += media[i];
+        }
+        float media_bits = total / 5.0;
+        float tensao_media = (3.3 * media_bits) / 4095.0;
+        printf("Valor medio lido: %.2f V\n", tensao_media);
+
+        Delay_ms(200);
+        if(tensao_media > 2){
+        	GPIO_Write_Pin(GPIOA, PIN_6, LOW);
+        } else if(tensao_media < 2)
+    	GPIO_Write_Pin(GPIOA, PIN_6, HIGH);
+    }
+}
 
 
+void sensorinternotemp(){
+
+	USART1_Init();
+
+	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+	ADC->CCR |= 0b01 << 16;
+	ADC1->SQR1 &= ~(0xF << 20);
+	ADC1->SQR3 |= 16;
+	ADC1->SMPR1 |= (7 << 18);
+	ADC->CCR |= ADC_CCR_TSVREFE;
+	ADC1->CR2 |= ADC_CR2_ADON;
+
+	uint32_t *p = (uint32_t *) 0x1FFF7A2C;
+	uint32_t Word = *p;
+	uint16_t TS_CAL1 = (Word & 0x0000FFFF);
+	uint16_t TS_CAL2 = (Word & 0xFFFF0000) >> 16;
+
+	while(1){
+
+		ADC1->CR2 |= ADC_CR2_SWSTART;
+		while(!(ADC1->SR & ADC_SR_EOC));
+		float temperatura = ((80 * (float)(ADC1->DR - TS_CAL1)) / (TS_CAL2 - TS_CAL1)) + 30;
+		printf("Temperatura do chip= %.2f\r\n", temperatura);
+		Delay_ms(500);
+	}
+
+}
+
+
+void aula04_11(void)
+{
+    ADC_Init(ADC1, SINGLE_CHANNEL, ADC_RES_12BITS);
+
+    GPIO_Clock_Enable(GPIOA);
+    GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
+
+    USART1_Init();
+
+    ADC_SingleChannel(ADC1, ADC_IN0);
+
+    uint16_t valores[25];
+    uint32_t soma;
+    float media;
+    float temperatura;
+
+    while(1)
+    {
+        soma = 0;
+        for(int i = 0; i < 25; i++)
+        {
+            valores[i] = ADC_GetSingleConversion(ADC1);
+        }
+        for(int i = 0; i < 25; i++)
+        {
+            soma += valores[i];
+        }
+        media = (float)soma / 25.0f;
+        temperatura = 25.0f + (media * 1575.0f / 4095.0f);
+
+        printf("Temperatura = %.2f C\r\n", temperatura);
+
+        Delay_ms(500);
+    }
+}
+
+
+void aula04_11resistor(void)
+{
+    ADC_Init(ADC1, SINGLE_CHANNEL, ADC_RES_12BITS);
+    USART1_Init();
+    ADC_SingleChannel(ADC1, ADC_IN0);
+    uint16_t conversao;
+    float lumens;
+    float novo_valor;
+
+    while(1)
+    {
+        conversao = ADC_GetSingleConversion(ADC1);
+        lumens = 100.0f + ((float)conversao * 700.0f / 4095.0f);
+        novo_valor = 1 - (lumens / 800);
+        printf("Iluminancia = %.2f lux\r\n", novo_valor * 800);
+        Delay_ms(1000);
+    }
+}
+
+
+static inline float ADC_rotiner_escalonador(ADC_TypeDef *ADCx, int PIN, float minimo, float maximo){
+    uint16_t conversao;
+    conversao = ADC_GetSingleConversion(ADCx);
+    float valor = minimo + ((float)conversao * (maximo - minimo) / 4095.0f);
+    return valor;
+}
+
+void aula05_11(){
+    DAC_Init1(DAC_CHANNEL2);
+
+    ADC_Init(ADC1, SINGLE_CHANNEL, ADC_RES_12BITS);
+    ADC_Init(ADC2, SINGLE_CHANNEL, ADC_RES_12BITS);
+
+    ADC_SingleChannel(ADC1, PIN_0);
+    ADC_SingleChannel(ADC2, PIN_1);
+
+    float potenciometro_one;
+    float potenciometro_two;
+
+    float fator_escala = 1.0f;
+
+    uint32_t delay_amostra_us;
+
+    const uint16_t samples[100]={
+    		2048, 2176, 2304, 2431, 2557, 2680, 2801, 2919, 3034, 3145,
+    		3251, 3353, 3449, 3540, 3625, 3704, 3776, 3842, 3900, 3951,
+    		3995, 4031, 4059, 4079, 4091, 4095, 4091, 4079, 4059, 4031,
+    		3995, 3951, 3900, 3842, 3776, 3704, 3625, 3540, 3449, 3353,
+    		3251, 3145, 3034, 2919, 2801, 2680, 2557, 2431, 2304, 2176,
+    		2048, 1919, 1791, 1664, 1538, 1415, 1294, 1176, 1061, 950,
+    		844, 742, 646, 555, 470, 391, 319, 253, 195, 144,
+    		100, 64, 36, 16, 4, 0, 4, 16, 36, 64,
+    		100, 144, 195, 253, 319, 391, 470, 555, 646, 742,
+    		844, 950, 1061, 1176, 1294, 1415, 1538, 1664, 1791, 1919};
+
+    while(1){
+        potenciometro_one = ADC_rotiner_escalonador(ADC1, PIN_0, 10.0f, 200.0f);
+        potenciometro_two = ADC_rotiner_escalonador(ADC2, PIN_1, 0.0f, 3.3f);
+        fator_escala = potenciometro_two / 3.3f;
+        delay_amostra_us = (uint32_t)(10000.0f / potenciometro_one);
+
+        for(int i = 0; i < 100; i++){
+
+            uint16_t amostra_escalonada = (uint16_t)(samples[i] * fator_escala);
+
+            DAC_SetValue(DAC_CHANNEL2,
+                amostra_escalonada,
+                DAC_RES_12BITS
+            );
+
+            Delay_us(delay_amostra_us);
+        }
+    }
+}
+
+
+void TIM3_Init(){
+	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+	TIM3->CR1 &= ~TIM_CR1_DIR;
+	TIM3->PSC = 41999;
+	TIM3->ARR = 40000;
+	TIM3->CR2 = 0b010 << 4;
+	TIM3->CR1 |= TIM_CR1_URS;
+	TIM3->EGR = 1;
+	TIM3->CR1 |= TIM_CR1_CEN;
+}
+
+
+void aula13_11(){
+	GPIO_Clock_Enable(GPIOA);
+	GPIO_Pin_Mode(GPIOA, PIN_7, ALTERNATE);
+	GPIO_Alternate_Function(GPIOA, PIN_7, AF2);
+
+    ADC_Init(ADC1, SINGLE_CHANNEL, ADC_RES_12BITS);
+    ADC_SingleChannel(ADC1, PIN_0);
+
+	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+	TIM3->CR1 &= ~TIM_CR1_DIR;
+	TIM3->PSC = 419;
+	TIM3->ARR = 99;
+	TIM3->CCMR1 |= 0b110 << 12;
+	TIM3->CCMR1 |= TIM_CCMR1_OC2PE;
+	TIM3->CCER |= TIM_CCER_CC2E;
+	TIM3->EGR = TIM_EGR_UG;
+	TIM3->CR1 |= TIM_CR1_CEN;
+
+
+	while(1){
+		TIM3->CCR2 = (int)ADC_rotiner_escalonador(ADC1, PIN_0, -1.0f, 100.0f);
+	}
+}
+
+
+
+void aula11_11(){
+    GPIO_Clock_Enable(GPIOA);
+    GPIO_Pin_Mode(GPIOA, PIN_6, OUTPUT);
+    GPIO_Pin_Mode(GPIOA, PIN_7, OUTPUT);
+
+    SysTick->LOAD = 6.3e6 - 1;
+    SysTick->CTRL = 0b011;
+	while(1){
+		GPIO_Toggle_Pin(GPIOA, PIN_6);
+		Delay_ms(1000);
+	}
+
+}
+
+void questao8prova2(){
+
+    USART1_Init();
+
+    RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+    ADC->CCR |= 0b01 << 16;
+    ADC1->SQR1 &= ~(0xF << 20);
+    ADC1->SQR3 |= 16;
+    ADC1->SMPR1 |= (7 << 18);
+    ADC->CCR |= ADC_CCR_TSVREFE;
+    ADC1->CR2 |= ADC_CR2_ADON;
+
+    uint32_t *p = (uint32_t *) 0x1FFF7A2C;
+    uint32_t Word = *p;
+    uint16_t TS_CAL1 = (Word & 0x0000FFFF);
+    uint16_t TS_CAL2 = (Word & 0xFFFF0000) >> 16;
+    uint32_t soma = 0;
+    uint16_t media = 0;
+
+    while(1){
+        soma = 0;
+        for(int i = 0; i < 50; i++){
+            ADC1->CR2 |= ADC_CR2_SWSTART;
+            while(!(ADC1->SR & ADC_SR_EOC));
+            soma += ADC1->DR;
+            Delay_ms(2);
+        }
+        media = soma / 50;
+        float temperatura =
+        ((80.0f * ((float)media - TS_CAL1)) /
+        (TS_CAL2 - TS_CAL1)) + 30.0f;
+        printf("Temperatura do chip = %.2f\r\n", temperatura);
+        if(temperatura < 45){
+            printf("Faixa Segura de Operacao\r\n");
+        }
+        else if(temperatura <= 55){
+            printf("Faixa de Atencao\r\n");
+        }
+        else{
+            printf("Faixa de Superaquecimento\r\n");
+        }
+
+        Delay_ms(100);
+    }
+}
+
+void questao9_prova2(void){
+
+    USART1_Init();
+
+    ADC_Init(ADC1, SINGLE_CHANNEL, ADC_RES_12BITS);
+    ADC_SingleChannel(ADC1, PIN_0);
+    GPIO_Resistor_Enable(GPIOA, PIN_0, PULL_DOWN);
+
+    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+    TIM3->PSC = 41999;
+    TIM3->ARR = 0xFFFF;
+    TIM3->CNT = 0;
+    TIM3->EGR = TIM_EGR_UG;
+    TIM3->SR = 0;
+    TIM3->CR1 |= TIM_CR1_CEN;
+
+    uint8_t estado = 0;
+    uint32_t largura_ms = 0;
+    uint8_t contador_subida = 0;
+    uint8_t contador_descida = 0;
+
+    while(1){
+        float soma = 0.0f;
+        for(int i = 0; i < 50; i++){
+            soma += ADC_rotiner_escalonador(ADC1, PIN_0, 0.0f, 3.3f);
+        }
+        float leitura = soma / 50.0f;
+
+        if(estado == 0){
+            if(leitura > 2.0f){
+                contador_subida++;
+                if(contador_subida >= 5){
+                    TIM3->CNT = 0;
+                    printf("Pulso iniciado...\r\n");
+                    estado = 1;
+                    contador_subida = 0;
+                }
+            } else {
+                contador_subida = 0;
+            }
+        }
+
+        else if(estado == 1){
+            largura_ms = TIM3->CNT / 2;
+
+            if(leitura <= 2.0f){
+                contador_descida++;
+                if(contador_descida >= 3){
+                    printf("Fim do pulso! Duracao total: %lu ms\r\n", largura_ms);
+                    TIM3->CNT = 0;
+                    estado = 2;
+                    contador_descida = 0;
+                }
+            } else {
+                contador_descida = 0;
+            }
+
+            if(largura_ms >= 5000){
+                printf("Pulso muito largo! (> 5000 ms)\r\n");
+                TIM3->CNT = 0;
+                estado = 2;
+                contador_descida = 0;
+            }
+            else if (estado == 1) {
+                printf("Tempo atual: %lu ms\r\n", largura_ms);
+            }
+        }
+
+        else if(estado == 2){
+            if(leitura > 2.0f){
+                TIM3->CNT = 0;
+            }
+            else if(TIM3->CNT >= 20){
+                estado = 0;
+            }
+        }
+    }
+}
+
+void TIM6Init(void) {
+    RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
+    TIM6->PSC = 0;
+    TIM6->ARR = 1905 - 1;
+    TIM6->CNT = 0;
+    TIM6->CR1 |= TIM_CR1_CEN;
+}
+
+void questao6_reproduzir_voz(void) {
+    DAC_Init1(DAC_CHANNEL2);
+    TIM6Init();
+
+
+    while(1) {
+        for (uint32_t i = 0; i < TAMANHO_AUDIO; i++) {
+            while (!(TIM6->SR & TIM_SR_UIF));
+            TIM6->SR &= ~TIM_SR_UIF;
+            uint32_t valor_12bits = ((uint32_t)audio_voz[i]) << 4;
+            DAC_SetValue(DAC_CHANNEL2, valor_12bits, DAC_RES_12BITS);
+        }
+        Delay_ms(2000);
+    }
+}
 
 
 
@@ -453,11 +679,13 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  USART1_Init();
+
 
   /* Chame aqui a função referente a rotina */
+  questao6_reproduzir_voz();
 
-  aula21_10();
-  /* USER CODE END 2
+   /* USER CODE END 2
    * Dó (C4): 261,63 HzRé (D4): 293,66 HzMi (E4): 329,63 HzFá (F4): 349,23 HzSol (G4): 392,00 HzLá (A4): 440,00 HzSi (B4): 493,88 Hz*/
 
   /* Infinite loop */
@@ -533,6 +761,10 @@ static void MX_GPIO_Init(void)
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
   /* USER CODE END MX_GPIO_Init_2 */
+}
+
+void SysTick_Handler(){
+	GPIO_Toggle_Pin(GPIOA, PIN_7);
 }
 
 /* USER CODE BEGIN 4 */
